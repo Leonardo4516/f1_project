@@ -4,13 +4,15 @@ public class Vehiculo {
     private String marcaEscuderia;
     private int velocidadMaxima;
     private double desgasteNeumaticos;
+    private Piloto piloto;
 
     
-    public Vehiculo(String marcaEscuderia, int velocidadMaxima, double desgasteNeumaticos) {
+    public Vehiculo(String marcaEscuderia, int velocidadMaxima, double desgasteNeumaticos, Piloto piloto) {
         
         setMarcaEscuderia(marcaEscuderia);
         setVelocidadMaxima(velocidadMaxima);
         setDesgasteNeumaticos(desgasteNeumaticos);
+        setPiloto(piloto);
 
     }
 
@@ -62,6 +64,22 @@ public class Vehiculo {
 
             this.desgasteNeumaticos = desgasteNeumaticos;
             
+        } else {
+
+            throw new IllegalArgumentException("Argumento inválido, intente de nuevo.");
+
+        }
+    }
+
+    public Piloto getPiloto(){
+        return piloto;
+    }
+
+    public final void setPiloto(Piloto piloto){
+        if (piloto != null) {
+
+            this.piloto = piloto;
+
         } else {
 
             throw new IllegalArgumentException("Argumento inválido, intente de nuevo.");
