@@ -1,5 +1,7 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
+import java.awt.FlowLayout;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
@@ -26,6 +28,8 @@ public class VentanaSimulacion extends JFrame {
 
         setLocationRelativeTo(null);
 
+        setLayout(new FlowLayout());
+
         txtUbicacion = new JTextField(15);
 
         btnIniciar = new JButton("Iniciar carrera");
@@ -33,6 +37,14 @@ public class VentanaSimulacion extends JFrame {
         barProgreso = new JProgressBar(0, 100);
 
         areaTexto = new JTextArea(10, 30);
+
+        add(txtUbicacion);
+
+        add(btnIniciar);
+
+        add(barProgreso);
+
+        add(areaTexto);
 
     }
 
