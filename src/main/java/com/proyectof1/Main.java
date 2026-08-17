@@ -8,7 +8,7 @@ import com.proyectof1.aplicacion.servicios.PilotoServicioImpl;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 import com.proyectof1.aplicacion.servicios.VehiculoServicioImpl;
 import com.proyectof1.dominio.Piloto;
-import com.proyectof1.infraestructura.adaptadores.entrada.VentanaSimulacion;
+import com.proyectof1.infraestructura.adaptadores.entrada.VentanaPrincipal;
 import com.proyectof1.infraestructura.adaptadores.salida.CircuitosRepositorioEnMemoria;
 import com.proyectof1.infraestructura.adaptadores.salida.ClimaHttpAdapter;
 import com.proyectof1.infraestructura.adaptadores.salida.PilotosRepositorioEnMemoria;
@@ -30,9 +30,9 @@ public class Main {
 
         cargarDatosDePrueba(pilotoServicio, circuitoServicio, vehiculoServicio);
 
-        VentanaSimulacion ventana = new VentanaSimulacion(simulacionService);
+        VentanaPrincipal principal = new VentanaPrincipal(circuitoServicio, pilotoServicio, vehiculoServicio, simulacionService);
 
-        ventana.setVisible(true);
+        principal.setVisible(true);
 
     }
 
