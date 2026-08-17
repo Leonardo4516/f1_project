@@ -9,6 +9,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import com.proyectof1.aplicacion.servicios.SimulacionService;
+import com.proyectof1.dominio.Circuito;
+import com.proyectof1.dominio.Piloto;
+import com.proyectof1.dominio.Vehiculo;
 
 public class VentanaSimulacion extends JFrame {
 
@@ -53,7 +56,26 @@ public class VentanaSimulacion extends JFrame {
         add(areaTexto);
 
         btnIniciar.addActionListener(e -> {
-            areaTexto.append("Gonorrea, se agregó esto en el area de texto.\n");
+
+            String ubicacion = txtUbicacion.getText();
+
+            Piloto piloto1 = new Piloto("Leonardo", 90, 90);
+
+            Vehiculo vehiculo1 = new Vehiculo("Williams", 320, 0.0, piloto1);
+
+            Circuito circuito1= new Circuito("Gran Premio Especial", 5793, ubicacion);
+
+            double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1);
+
+            double desgasteActual = vehiculo1.getDesgasteNeumaticos();
+
+            areaTexto.setText("=== RESULTADO DE LA SIMULACIÓN ===\n");
+            areaTexto.append("Circuito: " + circuito1.getNombre() + " en " + circuito1.getUbicacion() + "\n");
+            areaTexto.append("Piloto: " + piloto1.getNombre() + "\n");
+            areaTexto.append("Tiempo de Vuelta: " + tiempoVuelta + " segundos\n");
+            areaTexto.append("Desgaste de Neumáticos: " + desgasteActual + "%\n");
+
+
         });
 
     }
