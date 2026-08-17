@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 import com.proyectof1.dominio.Circuito;
@@ -45,6 +46,10 @@ public class VentanaSimulacion extends JFrame {
 
         barProgreso = new JProgressBar(0, 100);
 
+        barProgreso.setStringPainted(true);
+
+        barProgreso.setString("Presiona \"Iniciar carrera\" para comenzar");
+
         areaTexto = new JTextArea(10, 30);
 
         add(txtUbicacion);
@@ -57,11 +62,11 @@ public class VentanaSimulacion extends JFrame {
 
         btnIniciar.addActionListener(e -> {
 
+            String ubicacion = txtUbicacion.getText();
+
             new Thread(() -> {
 
                 try {
-
-                    String ubicacion = txtUbicacion.getText();
 
                     Piloto piloto1 = new Piloto("Leonardo", 90, 90);
 
@@ -69,20 +74,47 @@ public class VentanaSimulacion extends JFrame {
 
                     Circuito circuito1= new Circuito("Gran Premio Especial", 5.793, ubicacion);
 
-                    areaTexto.setText("");
+                    SwingUtilities.invokeLater(() -> {
 
-                    areaTexto.append("=== INICIANDO CARRERA EN " + ubicacion + " ===\n");
+                        areaTexto.setText("");
 
-                    for (int vuelta = 1; vuelta <= 5; vuelta++) {
+                        areaTexto.append("=== INICIANDO CARRERA EN " + ubicacion + " ===\n");
 
+                        barProgreso.setValue(0);
 
-                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1);
+                        barProgreso.setString("Carrera en curso...");
+
+                    });
+                    
+                    String climaConsulta = simulacionService.consultarClima(circuito1);
+
+                    int vueltasTotales = 5;
+
+                    for (int vuelta = 1; vuelta <= vueltasTotales; vuelta++) {
+
+                        int container = vuelta;
+
+                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1, climaConsulta);
 
                         double desgasteActual = vehiculo1.getDesgasteNeumaticos();
 
-                        areaTexto.append("Vuelta " + vuelta + " - Tiempo: " + ((int)tiempoVuelta) + " s | Desgaste: " + desgasteActual + "%\n");
+                        SwingUtilities.invokeLater(() -> {
 
-                        barProgreso.setValue(((int)desgasteActual));
+                            areaTexto.append("Vuelta " + container + " - Tiempo: " + ((int)tiempoVuelta) + " s | Desgaste: " + desgasteActual + "%\n");
+
+                            barProgreso.setValue(container * 100 / vueltasTotales);
+
+                            if (container == vueltasTotales) {
+
+                                barProgreso.setString("Carrera finalizada");
+
+                            } else {
+
+                                barProgreso.setString("Vuelta " + container + " de " + vueltasTotales);
+
+                            }
+
+                        });
 
                         Thread.sleep(1000);
 

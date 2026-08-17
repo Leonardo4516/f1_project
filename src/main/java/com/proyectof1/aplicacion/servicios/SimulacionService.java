@@ -21,9 +21,15 @@ public class SimulacionService {
         }
     }
 
-    public double simularVuelta(Vehiculo vehiculo, Circuito circuito){
+    public String consultarClima(Circuito circuito){
 
-        String clima = climaService.obtenerClima(circuito.getUbicacion());
+        String clima;
+
+        return clima = climaService.obtenerClima(circuito.getUbicacion());
+
+    }
+
+    public double simularVuelta(Vehiculo vehiculo, Circuito circuito, String clima){
 
         double tiempoBase = (circuito.getKilometros() / vehiculo.getVelocidadMaxima()) * 3600.0;
 
