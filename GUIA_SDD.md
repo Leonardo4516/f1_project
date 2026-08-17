@@ -57,7 +57,24 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 |-------------|------------------------|--------|
 | 04/08/2026  | Creación del framework DSD y esta guía | Completada |
 | 04/08/2026  | Se incorporó README.md con especificación inicial del proyecto | Completada |
-| 05/08/2026  | Se creó la clase `Circuito` en el paquete `com.proyectof1.Circuitos` (atributos: longitud, vueltas, records, ganadores_ant) | En progreso |
+| 05/08/2026  | Se creó la clase `Circuito` con atributos (nombre, kilometros, ubicacion) | Completada |
+| 16/08/2026  | Se creó la clase `Vehiculo` con validación de velocidad y desgaste de neumáticos | Completada |
+| 16/08/2026  | Se creó la clase `Piloto` con validaciones de habilidad y experiencia | Completada |
+| 16/08/2026  | Se agregó relación de agregación entre `Vehiculo` y `Piloto` con validación | Completada |
+| 16/08/2026  | Se creó el puerto de salida `ClimaServicePort` para el clima | Completada |
+| 16/08/2026  | Se completó `SimulacionService` con motor matemático de vueltas | Completada |
+| 16/08/2026  | Se creó el esqueleto inicial de `ClimaHttpAdapter` con retorno mock | Completada |
+| 16/08/2026  | Se implementó `ClimaHttpAdapter` conectado a la API de wttr.in | Completada |
+| 16/08/2026  | Se estructuró `VentanaSimulacion` e instanciaron componentes gráficos | Completada |
+| 16/08/2026  | Se configuró `FlowLayout` y se añadieron componentes a `VentanaSimulacion` | Completada |
+| 16/08/2026  | Se conectó y visibilizó `VentanaSimulacion` desde `Main` | Completada |
+| 17/08/2026  | Se inyectaron `ClimaHttpAdapter` y `SimulacionService` en `VentanaSimulacion` desde `Main` | Completada |
+| 17/08/2026  | Se conectó `SimulacionService` en el botón y se imprimió telemetría en `JTextArea` | Completada |
+| 17/08/2026  | Fase 0.1: corrección de unidades km/m del circuito y truncado del tiempo de vuelta | Completada |
+| 17/08/2026  | Fase 0.2: corrección del EDT de Swing, actualizaciones de UI vía `SwingUtilities.invokeLater` | Completada |
+| 17/08/2026  | Fase 0.3: clima consultado una sola vez por carrera (`consultarClima` + `simularVuelta` con clima) | Completada |
+| 17/08/2026  | Fase 0.4: barra de progreso con progreso real y etiquetas ("Vuelta X de Y", "Carrera finalizada") | Completada |
+| 17/08/2026  | Fase 0.5: pendiente de cierre (restaurar flag de interrupción y limpiar marcadores IA de comentarios) | Pendiente |
 
 ---
 
@@ -67,8 +84,12 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 
 | Prioridad | Tarea | Estado | Dependencias |
 |-----------|-------|--------|--------------|
-| Alta      | Definir estructura de clases (Circuito, Piloto, Vehiculo) | En progreso | - |
-| Alta      | Implementar CRUD de circuitos | Pendiente | Estructura de clases |
-| Media     | Implementar CRUD de pilotos | Pendiente | Estructura de clases |
-| Media     | Implementar CRUD de vehículos | Pendiente | Estructura de clases |
-| Baja      | Diseñar la simulación de carrera | Pendiente | Módulos CRUD |
+| Alta      | Definir estructura de clases (Circuito, Piloto, Vehiculo) | Completada | - |
+| Alta      | Simulación base: motor de vueltas, clima vía API y UI Swing | Completada | Estructura de clases |
+| Alta      | Fase 0: correcciones de unidades, EDT, clima por carrera y barra de progreso | Completada | Simulación base |
+| Media     | Fase 1: repositorios en memoria (HashMap) y puertos de salida | Pendiente | Simulación base |
+| Media     | Fase 1: puertos de entrada y servicios CRUD (Circuito, Piloto, Vehiculo) | Pendiente | Repositorios |
+| Baja      | Fase 2: interfaz de administración con navegación y CRUD | Pendiente | Servicios CRUD |
+| Baja      | Fase 2: simulación con entidades seleccionables (no hardcodeadas) | Pendiente | Interfaz admin |
+| Baja      | Fase 3: pruebas unitarias (JUnit) | Pendiente | Servicios CRUD |
+| Baja      | Fase 0.5: limpieza final (flag de interrupción y marcadores IA en comentarios) | Pendiente | - |

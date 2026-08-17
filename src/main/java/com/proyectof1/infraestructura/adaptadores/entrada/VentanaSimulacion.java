@@ -123,6 +123,8 @@ public class VentanaSimulacion extends JFrame {
                     
                 } catch (InterruptedException ex) {
 
+                    Thread.currentThread().interrupt();
+
                 }
 
             }).start();
