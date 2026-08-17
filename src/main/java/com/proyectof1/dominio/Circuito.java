@@ -61,4 +61,11 @@ public class Circuito {
         }
     }
 
+    @Override
+    public String toString() {
+
+        return nombre + " | " + kilometros + " km | " + ubicacion;
+
+    }
+
 }

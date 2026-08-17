@@ -3,20 +3,31 @@ package com.proyectof1.infraestructura.adaptadores.entrada;
 import java.awt.FlowLayout;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
+import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 import com.proyectof1.dominio.Circuito;
-import com.proyectof1.dominio.Piloto;
 import com.proyectof1.dominio.Vehiculo;
 
 public class VentanaSimulacion extends JFrame {
 
-    private JTextField txtUbicacion;
+    private final CircuitoServicio circuitoServicio;
+
+    private final VehiculoServicio vehiculoServicio;
+
+    private final SimulacionService simulacionService;
+
+    private JComboBox<Circuito> comboCircuitos;
+
+    private JComboBox<Vehiculo> comboVehiculos;
 
     private JButton btnIniciar;
 
@@ -24,23 +35,47 @@ public class VentanaSimulacion extends JFrame {
 
     private JTextArea areaTexto;
 
-    private SimulacionService simulacionService;
+    public VentanaSimulacion(CircuitoServicio circuitoServicio, VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
 
-    public VentanaSimulacion (SimulacionService simulacionService){
+        if (circuitoServicio != null && vehiculoServicio != null && simulacionService != null) {
 
-        this.simulacionService = simulacionService;
+            this.circuitoServicio = circuitoServicio;
+
+            this.vehiculoServicio = vehiculoServicio;
+
+            this.simulacionService = simulacionService;
+
+        } else {
+
+            throw new IllegalArgumentException("Los servicios no pueden ser nulos.");
+
+        }
 
         setTitle("Simulador de Fórmula 1");
 
-        setSize(500, 600);
+        setSize(520, 420);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         setLocationRelativeTo(null);
 
         setLayout(new FlowLayout());
 
-        txtUbicacion = new JTextField(15);
+        comboCircuitos = new JComboBox<>();
+
+        for (Circuito circuito : circuitoServicio.listarCircuitos()) {
+
+            comboCircuitos.addItem(circuito);
+
+        }
+
+        comboVehiculos = new JComboBox<>();
+
+        for (Vehiculo vehiculo : vehiculoServicio.listarVehiculos()) {
+
+            comboVehiculos.addItem(vehiculo);
+
+        }
 
         btnIniciar = new JButton("Iniciar carrera");
 
@@ -48,11 +83,17 @@ public class VentanaSimulacion extends JFrame {
 
         barProgreso.setStringPainted(true);
 
-        barProgreso.setString("Presiona \"Iniciar carrera\" para comenzar");
+        barProgreso.setString("Elige circuito y vehículo, luego presiona Iniciar");
 
-        areaTexto = new JTextArea(10, 30);
+        areaTexto = new JTextArea(12, 40);
 
-        add(txtUbicacion);
+        add(new JLabel("Circuito:"));
+
+        add(comboCircuitos);
+
+        add(new JLabel("Vehículo:"));
+
+        add(comboVehiculos);
 
         add(btnIniciar);
 
@@ -62,31 +103,35 @@ public class VentanaSimulacion extends JFrame {
 
         btnIniciar.addActionListener(e -> {
 
-            String ubicacion = txtUbicacion.getText();
+            Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
+
+            Vehiculo vehiculo = (Vehiculo) comboVehiculos.getSelectedItem();
+
+            if (circuito == null || vehiculo == null) {
+
+                JOptionPane.showMessageDialog(this, "No hay circuitos o vehículos registrados.");
+
+                return;
+
+            }
 
             new Thread(() -> {
 
                 try {
 
-                    Piloto piloto1 = new Piloto("Leonardo", 90, 90);
-
-                    Vehiculo vehiculo1 = new Vehiculo("Williams", 320, 0.0, piloto1);
-
-                    Circuito circuito1= new Circuito("Gran Premio Especial", 5.793, ubicacion);
-
                     SwingUtilities.invokeLater(() -> {
 
                         areaTexto.setText("");
 
-                        areaTexto.append("=== INICIANDO CARRERA EN " + ubicacion + " ===\n");
+                        areaTexto.append("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===\n");
 
                         barProgreso.setValue(0);
 
                         barProgreso.setString("Carrera en curso...");
 
                     });
-                    
-                    String climaConsulta = simulacionService.consultarClima(circuito1);
+
+                    String climaConsulta = simulacionService.consultarClima(circuito);
 
                     int vueltasTotales = 5;
 
@@ -94,9 +139,9 @@ public class VentanaSimulacion extends JFrame {
 
                         int container = vuelta;
 
-                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1, climaConsulta);
+                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo, circuito, climaConsulta);
 
-                        double desgasteActual = vehiculo1.getDesgasteNeumaticos();
+                        double desgasteActual = vehiculo.getDesgasteNeumaticos();
 
                         SwingUtilities.invokeLater(() -> {
 
@@ -120,7 +165,6 @@ public class VentanaSimulacion extends JFrame {
 
                     }
 
-                    
                 } catch (InterruptedException ex) {
 
                     Thread.currentThread().interrupt();

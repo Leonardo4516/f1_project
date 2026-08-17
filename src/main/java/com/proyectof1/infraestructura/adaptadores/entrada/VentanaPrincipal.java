@@ -78,6 +78,8 @@ public class VentanaPrincipal extends JFrame {
 
         btnVehiculos.addActionListener(e -> new VentanaVehiculos(vehiculoServicio, pilotoServicio).setVisible(true));
 
+        btnSimulacion.addActionListener(e -> new VentanaSimulacion(circuitoServicio, vehiculoServicio, simulacionService).setVisible(true));
+
     }
 
 }

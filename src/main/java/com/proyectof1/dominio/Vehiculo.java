@@ -87,4 +87,11 @@ public class Vehiculo {
         }
     }
 
+    @Override
+    public String toString() {
+
+        return marcaEscuderia + " | " + velocidadMaxima + " km/h | Piloto: " + piloto.getNombre();
+
+    }
+
 }
