@@ -8,6 +8,8 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import com.proyectof1.aplicacion.servicios.SimulacionService;
+
 public class VentanaSimulacion extends JFrame {
 
     private JTextField txtUbicacion;
@@ -18,7 +20,11 @@ public class VentanaSimulacion extends JFrame {
 
     private JTextArea areaTexto;
 
-    public VentanaSimulacion(){
+    private SimulacionService simulacionService;
+
+    public VentanaSimulacion (SimulacionService simulacionService){
+
+        this.simulacionService = simulacionService;
 
         setTitle("Simulador de Fórmula 1");
 
@@ -45,6 +51,10 @@ public class VentanaSimulacion extends JFrame {
         add(barProgreso);
 
         add(areaTexto);
+
+        btnIniciar.addActionListener(e -> {
+            areaTexto.append("Gonorrea, se agregó esto en el area de texto.\n");
+        });
 
     }
 
