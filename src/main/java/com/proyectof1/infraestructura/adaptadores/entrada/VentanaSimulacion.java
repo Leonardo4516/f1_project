@@ -57,24 +57,43 @@ public class VentanaSimulacion extends JFrame {
 
         btnIniciar.addActionListener(e -> {
 
-            String ubicacion = txtUbicacion.getText();
+            new Thread(() -> {
 
-            Piloto piloto1 = new Piloto("Leonardo", 90, 90);
+                try {
 
-            Vehiculo vehiculo1 = new Vehiculo("Williams", 320, 0.0, piloto1);
+                    String ubicacion = txtUbicacion.getText();
 
-            Circuito circuito1= new Circuito("Gran Premio Especial", 5793, ubicacion);
+                    Piloto piloto1 = new Piloto("Leonardo", 90, 90);
 
-            double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1);
+                    Vehiculo vehiculo1 = new Vehiculo("Williams", 320, 0.0, piloto1);
 
-            double desgasteActual = vehiculo1.getDesgasteNeumaticos();
+                    Circuito circuito1= new Circuito("Gran Premio Especial", 5.793, ubicacion);
 
-            areaTexto.setText("=== RESULTADO DE LA SIMULACIÓN ===\n");
-            areaTexto.append("Circuito: " + circuito1.getNombre() + " en " + circuito1.getUbicacion() + "\n");
-            areaTexto.append("Piloto: " + piloto1.getNombre() + "\n");
-            areaTexto.append("Tiempo de Vuelta: " + tiempoVuelta + " segundos\n");
-            areaTexto.append("Desgaste de Neumáticos: " + desgasteActual + "%\n");
+                    areaTexto.setText("");
 
+                    areaTexto.append("=== INICIANDO CARRERA EN " + ubicacion + " ===\n");
+
+                    for (int vuelta = 1; vuelta <= 5; vuelta++) {
+
+
+                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo1, circuito1);
+
+                        double desgasteActual = vehiculo1.getDesgasteNeumaticos();
+
+                        areaTexto.append("Vuelta " + vuelta + " - Tiempo: " + ((int)tiempoVuelta) + " s | Desgaste: " + desgasteActual + "%\n");
+
+                        barProgreso.setValue(((int)desgasteActual));
+
+                        Thread.sleep(1000);
+
+                    }
+
+                    
+                } catch (InterruptedException ex) {
+
+                }
+
+            }).start();
 
         });
 
