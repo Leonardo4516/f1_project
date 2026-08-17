@@ -8,12 +8,12 @@ public interface CircuitosRepositorio {
 
     void guardar(Circuito circuito);
 
-    List<Circuito> listarTodos(String nombre);
+    List<Circuito> listarTodos();
 
     Circuito buscarPorNombre(String nombre);
 
     List<Circuito> buscarPorUbicacion(String ubicacion);
 
     boolean eliminarPorNombre(String nombre);
-    
+
 }

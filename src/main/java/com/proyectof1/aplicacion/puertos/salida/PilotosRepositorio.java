@@ -10,7 +10,7 @@ public interface PilotosRepositorio {
 
     List<Piloto> listarTodos();
 
-    Piloto BuscarPorNombre(String nombre);
+    Piloto buscarPorNombre(String nombre);
 
     boolean eliminarPorNombre(String nombre);
 
