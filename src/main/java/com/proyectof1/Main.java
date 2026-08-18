@@ -10,6 +10,7 @@ import com.proyectof1.aplicacion.servicios.SimulacionService;
 import com.proyectof1.aplicacion.servicios.VehiculoServicioImpl;
 import com.proyectof1.dominio.Piloto;
 import com.proyectof1.infraestructura.adaptadores.entrada.VentanaPrincipal;
+import com.proyectof1.infraestructura.adaptadores.entrada.TemaF1;
 import com.proyectof1.infraestructura.adaptadores.salida.CircuitosRepositorioJson;
 import com.proyectof1.infraestructura.adaptadores.salida.ClimaHttpAdapter;
 import com.proyectof1.infraestructura.adaptadores.salida.PilotosRepositorioJson;
@@ -28,6 +29,9 @@ import com.proyectof1.infraestructura.adaptadores.salida.VehiculosRepositorioJso
 public class Main {
 
     public static void main(String[] args) {
+
+        // Tema oscuro estilo Fórmula 1 para todas las ventanas de la aplicación.
+        TemaF1.aplicarTema();
 
         // Los repositorios JSON se construyen primero, ordenadamente:
         // pilotos -> vehículos (necesitan a los pilotos para resolverse).
