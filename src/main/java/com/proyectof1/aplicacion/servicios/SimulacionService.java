@@ -1,13 +1,21 @@
 package com.proyectof1.aplicacion.servicios;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.proyectof1.aplicacion.puertos.salida.ClimaServicePort;
 import com.proyectof1.dominio.Circuito;
+import com.proyectof1.dominio.CompuestoNeumatico;
 import com.proyectof1.dominio.Vehiculo;
 
 /**
  * Servicio de aplicación que gestiona la lógica de la simulación de carreras.
- * Consulta el clima real a través del puerto de salida y calcula
- * los tiempos de vuelta de cada vehículo según sus características.
+ * Consulta el clima real a través del puerto de salida y calcula los tiempos
+ * de vuelta de cada vehículo según sus características, el compuesto de
+ * neumáticos elegido y el desgaste acumulado.
  */
 public class SimulacionService {
 
@@ -32,16 +40,24 @@ public class SimulacionService {
     }
 
     /**
-     * Consulta el clima de la ubicación del circuito a través del puerto de salida.
+     * Consulta el clima real de la ubicación del circuito a través del puerto de salida.
      *
      * @param circuito Circuito del que se quiere conocer el clima.
      * @return Estado del clima ("Lluvia" o "Seco").
      */
     public String consultarClima(Circuito circuito) {
 
-        String clima;
+        return climaService.obtenerClima(circuito.getUbicacion());
 
-        return clima = climaService.obtenerClima(circuito.getUbicacion());
+    }
+
+    /**
+     * Calcula el tiempo de una vuelta usando el compuesto por defecto (blando).
+     * Se conserva para mantener compatibilidad con las llamadas anteriores.
+     */
+    public double simularVuelta(Vehiculo vehiculo, Circuito circuito, String clima) {
+
+        return simularVuelta(vehiculo, circuito, clima, CompuestoNeumatico.BLANDO);
 
     }
 
@@ -49,20 +65,35 @@ public class SimulacionService {
      * Calcula el tiempo (en segundos) de una vuelta de un vehículo en un circuito.
      * La fórmula tiene en cuenta:
      *  - La longitud del circuito y la velocidad máxima del vehículo.
+     *  - El compuesto de neumáticos (frena por agarre y se frena aún más con el desgaste).
      *  - La experiencia del piloto (a más experiencia, menor tiempo).
      *  - En caso de lluvia, una penalización inversamente proporcional a la
      *    habilidad del piloto bajo lluvia.
-     * Además, incrementa el desgaste de los neumáticos del vehículo en 1.5%.
+     * Además, incrementa el desgaste de los neumáticos del vehículo según el compuesto.
      *
      * @param vehiculo Vehículo que participa.
      * @param circuito Circuito donde se corre.
      * @param clima    Estado del clima.
+     * @param compuesto Compuesto de neumáticos montado en el vehículo.
      * @return Tiempo estimado de la vuelta en segundos.
      */
-    public double simularVuelta(Vehiculo vehiculo, Circuito circuito, String clima) {
+    public double simularVuelta(Vehiculo vehiculo, Circuito circuito, String clima, CompuestoNeumatico compuesto) {
+
+        // Cada 100% de desgaste resta 5 km/h a la velocidad máxima.
+        double penalizacionDesgaste = vehiculo.getDesgasteNeumaticos() * 0.05;
+
+        // Velocidad efectiva: máxima - pérdida del compuesto - desgaste.
+        double velocidadEfectiva = vehiculo.getVelocidadMaxima() - compuesto.getPerdidaVelocidad() - penalizacionDesgaste;
+
+        // Guarda contra un valor imposible que dividiría entre cero.
+        if (velocidadEfectiva <= 0) {
+
+            velocidadEfectiva = 1.0;
+
+        }
 
         // Tiempo base: convertir (km / km/h) a horas y luego a segundos (x 3600).
-        double tiempoBase = (circuito.getKilometros() / vehiculo.getVelocidadMaxima()) * 3600.0;
+        double tiempoBase = (circuito.getKilometros() / velocidadEfectiva) * 3600.0;
 
         // La experiencia (1-100) reduce el tiempo: a 100 de experiencia, factor 0.5 -> la mitad del tiempo.
         double factorExperiencia = 1.0 - (vehiculo.getPiloto().getExperiencia() / 200.0);
@@ -77,10 +108,60 @@ public class SimulacionService {
 
         }
 
-        // Cada vuelta aumenta el desgaste en un 1.5%, sin superar el 100%.
-        double nuevoDesgaste = Math.min(vehiculo.getDesgasteNeumaticos() + 1.5, 100.0);
+        // Cada vuelta aumenta el desgaste según el compuesto, sin superar el 100%.
+        double nuevoDesgaste = Math.min(vehiculo.getDesgasteNeumaticos() + compuesto.getDesgastePorVuelta(), 100.0);
         vehiculo.setDesgasteNeumaticos(nuevoDesgaste);
 
         return tiempoCalculado;
     }
+
+    /**
+     * Simula una sesión de clasificación de una vuelta lanzada por cada vehículo.
+     *
+     * @param vehiculos Vehículos que participan en la clasificación.
+     * @param circuito  Circuito donde se corre.
+     * @param clima     Estado del clima.
+     * @return Una lista (NUEVA, sin modificar la original) con los vehículos
+     *         ordenados de mejor a peor tiempo: la parrilla de salida.
+     */
+    public List<Vehiculo> simularClasificacion(List<Vehiculo> vehiculos, Circuito circuito, String clima) {
+
+        // Se calcula un tiempo por vehículo antes de ordenar para no repetir
+        // la vuelta lanzada durante la comparación del ordenamiento.
+        Map<Vehiculo, Double> tiempos = new HashMap<>();
+
+        for (Vehiculo vehiculo : vehiculos) {
+
+            double tiempo = simularVuelta(vehiculo, circuito, clima, CompuestoNeumatico.BLANDO);
+            tiempos.put(vehiculo, tiempo);
+
+        }
+
+        List<Vehiculo> parrilla = new ArrayList<>(vehiculos);
+
+        parrilla.sort(Comparator.comparingDouble(tiempos::get));
+
+        return parrilla;
+    }
+
+    /**
+     * Resuelve el clima efectivo de la carrera según la configuración:
+     * si es automático se consulta la API; si no, se usa el clima forzado.
+     *
+     * @param circuito     Circuito de la carrera.
+     * @param climaElegido "Auto", "Seco" o "Lluvia".
+     * @return El clima concreto con el que se simulará: "Lluvia" o "Seco".
+     */
+    public String resolverClima(Circuito circuito, String climaElegido) {
+
+        if (climaElegido != null && climaElegido.equalsIgnoreCase("Auto")) {
+
+            return consultarClima(circuito);
+
+        }
+
+        return "Lluvia".equals(climaElegido) ? "Lluvia" : "Seco";
+
+    }
+
 }
