@@ -4,10 +4,12 @@ import com.proyectof1.aplicacion.puertos.salida.ClimaServicePort;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.URLEncoder;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Adaptador de salida (infraestructura) que implementa ClimaServicePort.
@@ -20,8 +22,10 @@ public class ClimaHttpAdapter implements ClimaServicePort {
     /** Consulta el clima actual de la ubicación dada. */
     @Override
     public String obtenerClima(String ubicacion) {
-        // 1. Construir la URL del servicio climático wttr.in (formato JSON 'j1')
-        String url = "https://wttr.in/" + ubicacion + "?format=j1";
+        // 1. Construir la URL del servicio climático wttr.in (formato JSON 'j1').
+        //    Se codifica la ubicación para soportar espacios y acentos de forma segura.
+        String ubicacionCodificada = URLEncoder.encode(ubicacion, StandardCharsets.UTF_8).replace("+", "%20");
+        String url = "https://wttr.in/" + ubicacionCodificada + "?format=j1";
 
         // 2. Crear el cliente y la petición HTTP de Java
         HttpClient client = HttpClient.newHttpClient();
