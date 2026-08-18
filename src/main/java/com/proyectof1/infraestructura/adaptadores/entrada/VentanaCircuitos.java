@@ -2,34 +2,35 @@ package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 
-import javax.swing.DefaultListModel;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
 
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.dominio.Circuito;
 
 /**
  * Ventana de gestión de circuitos (adaptador de entrada en Swing).
- * Permite listar, registrar, actualizar, buscar y eliminar circuitos mediante
- * el puerto de entrada CircuitoServicio.
+ * Lista los circuitos en una tabla y permite registrar, actualizar,
+ * buscar y eliminar mediante el puerto de entrada CircuitoServicio.
  */
 public class VentanaCircuitos extends JFrame {
 
     // Servicio de circuitos (puerto de entrada) inyectado.
     private final CircuitoServicio circuitoServicio;
 
-    // Modelo de datos que alimenta la JList (lista de strings).
-    private DefaultListModel<String> modeloLista;
+    // Modelo de datos que alimenta la JTable (no editable).
+    private DefaultTableModel modelo;
 
-    private JList<String> listaCircuitos;
+    private JTable tabla;
 
     // Campos de texto del formulario.
     private JTextField txtNombre;
@@ -48,61 +49,52 @@ public class VentanaCircuitos extends JFrame {
      */
     public VentanaCircuitos(CircuitoServicio circuitoServicio) {
 
-        if (circuitoServicio != null) {
-
-            this.circuitoServicio = circuitoServicio;
-
-        } else {
+        if (circuitoServicio == null) {
 
             throw new IllegalArgumentException("El servicio de circuitos no puede ser nulo.");
 
         }
 
+        this.circuitoServicio = circuitoServicio;
+
         // Configuración básica de la ventana.
         setTitle("Administración de Circuitos");
-        setSize(500, 450);
+        setSize(580, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Zona central: la lista de circuitos con barra de desplazamiento.
-        modeloLista = new DefaultListModel<>();
-        listaCircuitos = new JList<>(modeloLista);
-        add(new JScrollPane(listaCircuitos), BorderLayout.CENTER);
+        // ----- Cabecera: título y botón de eliminar. -----
+        JPanel cabecera = new JPanel(new BorderLayout());
+        cabecera.setBorder(TemaF1.margenes(12, 6, 16, 16));
+        cabecera.add(TemaF1.titulo("Circuitos"), BorderLayout.WEST);
 
-        // Botón para eliminar el circuito seleccionado de la lista.
         btnEliminar = new JButton("Eliminar seleccionado");
-        add(btnEliminar, BorderLayout.NORTH);
+        TemaF1.estilizarBoton(btnEliminar);
+        cabecera.add(btnEliminar, BorderLayout.EAST);
 
-        // Panel superior-superior: búsqueda por nombre.
-        JPanel panelBuscar = new JPanel(new FlowLayout());
-        txtBuscar = new JTextField(15);
-        btnBuscar = new JButton("Buscar por nombre");
+        add(cabecera, BorderLayout.NORTH);
 
-        panelBuscar.add(new JLabel("Nombre a buscar:"));
-        panelBuscar.add(txtBuscar);
-        panelBuscar.add(btnBuscar);
+        // ----- Centro: tabla con los circuitos. -----
+        modelo = new DefaultTableModel(new String[]{"Nombre", "Kilómetros (km)", "Ubicación"}, 0) {
 
-        // Panel inferior-superior: formulario para registrar/actualizar.
-        JPanel panelFormulario = new JPanel(new FlowLayout());
-        txtNombre = new JTextField(10);
-        txtKilometros = new JTextField(6);
-        txtUbicacion = new JTextField(10);
-        btnRegistrar = new JButton("Registrar/Actualizar");
+            @Override
+            public boolean isCellEditable(int fila, int columna) {
+                return false;
+            }
+        };
+        tabla = new JTable(modelo);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabla.setRowHeight(26);
+        add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        panelFormulario.add(new JLabel("Nombre:"));
-        panelFormulario.add(txtNombre);
-        panelFormulario.add(new JLabel("Kilómetros:"));
-        panelFormulario.add(txtKilometros);
-        panelFormulario.add(new JLabel("Ubicación:"));
-        panelFormulario.add(txtUbicacion);
-        panelFormulario.add(btnRegistrar);
-
-        // Panel inferior: agrupa búsqueda (arriba) y formulario (abajo).
-        JPanel panelSur = new JPanel(new BorderLayout());
-        panelSur.add(panelBuscar, BorderLayout.NORTH);
-        panelSur.add(panelFormulario, BorderLayout.SOUTH);
-        add(panelSur, BorderLayout.SOUTH);
+        // ----- Sur: fila de búsqueda y fila de formulario. -----
+        JPanel cuerpoSur = new JPanel();
+        cuerpoSur.setLayout(new BoxLayout(cuerpoSur, BoxLayout.Y_AXIS));
+        cuerpoSur.setBorder(TemaF1.margenes(8, 12, 16, 16));
+        cuerpoSur.add(construirPanelBusqueda());
+        cuerpoSur.add(construirPanelFormulario());
+        add(cuerpoSur, BorderLayout.SOUTH);
 
         // Acción del botón Registrar: lee los campos, llama al servicio y refresca.
         btnRegistrar.addActionListener(e -> {
@@ -115,41 +107,40 @@ public class VentanaCircuitos extends JFrame {
 
                 circuitoServicio.registrar(nombre, kilometros, ubicacion);
 
-                actualizarLista();
+                actualizarTabla();
                 limpiarCampos();
 
             } catch (Exception ex) {
 
-                // Si el parseo o la validación del dominio fallan, muestra el error.
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Registro de circuito", JOptionPane.ERROR_MESSAGE);
+                javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                        "Registro de circuito", javax.swing.JOptionPane.ERROR_MESSAGE);
 
             }
-
         });
 
-        // Acción del botón Eliminar: elimina el circuito seleccionado de la lista.
+        // Acción del botón Eliminar: borra el circuito seleccionado de la tabla.
         btnEliminar.addActionListener(e -> {
 
-            String seleccion = listaCircuitos.getSelectedValue();
+            int fila = tabla.getSelectedRow();
 
-            if (seleccion == null) {
+            if (fila < 0) {
 
-                JOptionPane.showMessageDialog(this, "Selecciona un circuito de la lista.");
+                javax.swing.JOptionPane.showMessageDialog(this, "Selecciona un circuito de la tabla.");
                 return;
 
             }
 
-            // extraerNombre obtiene solo el nombre a partir de la cadena mostrada.
-            if (circuitoServicio.eliminar(extraerNombre(seleccion))) {
+            String nombre = (String) modelo.getValueAt(fila, 0);
 
-                actualizarLista();
+            if (circuitoServicio.eliminar(nombre)) {
+
+                actualizarTabla();
 
             } else {
 
-                JOptionPane.showMessageDialog(this, "No se encontró el circuito.");
+                javax.swing.JOptionPane.showMessageDialog(this, "No se encontró el circuito.");
 
             }
-
         });
 
         // Acción del botón Buscar: muestra los datos del circuito encontrado.
@@ -159,32 +150,75 @@ public class VentanaCircuitos extends JFrame {
 
             if (encontrado != null) {
 
-                JOptionPane.showMessageDialog(this, "Circuito: " + encontrado.getNombre() + " | " + encontrado.getKilometros() + " km | " + encontrado.getUbicacion());
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Circuito: " + encontrado.getNombre() + " | " + encontrado.getKilometros() + " km | " + encontrado.getUbicacion());
 
             } else {
 
-                JOptionPane.showMessageDialog(this, "Circuito no encontrado.");
+                javax.swing.JOptionPane.showMessageDialog(this, "Circuito no encontrado.");
 
             }
-
         });
 
-        // Al abrir la ventana se carga la lista con los circuitos existentes.
-        actualizarLista();
+        // Al abrir la ventana se carga la tabla con los circuitos existentes.
+        actualizarTabla();
 
     }
 
-    /** Refresca la lista mostrando todos los circuitos del servicio. */
-    private void actualizarLista() {
+    /** Construye la fila superior del sur: búsqueda por nombre. */
+    private JPanel construirPanelBusqueda() {
 
-        modeloLista.clear();
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+
+        txtBuscar = new JTextField(18);
+        btnBuscar = new JButton("Buscar por nombre");
+
+        panel.add(TemaF1.etiqueta("Nombre a buscar:"));
+        panel.add(txtBuscar);
+        panel.add(btnBuscar);
+
+        return panel;
+    }
+
+    /** Construye la fila inferior del sur: formulario para registrar/actualizar. */
+    private JPanel construirPanelFormulario() {
+
+        // Usa GridLayout para que todos los pares etiqueta-campo queden alineados.
+        JPanel panel = new JPanel(new GridLayout(1, 6, 8, 0));
+
+        txtNombre = new JTextField(10);
+        txtKilometros = new JTextField(6);
+        txtUbicacion = new JTextField(10);
+        btnRegistrar = new JButton("Registrar / Actualizar");
+
+        panel.add(TemaF1.etiqueta("Nombre:"));
+        panel.add(txtNombre);
+        panel.add(TemaF1.etiqueta("Km:"));
+        panel.add(txtKilometros);
+        panel.add(TemaF1.etiqueta("Ubicación:"));
+        panel.add(txtUbicacion);
+
+        // El botón se coloca debajo, centrado, para no desbordar la fila.
+        JPanel contenedor = new JPanel(new BorderLayout());
+        contenedor.add(panel, BorderLayout.CENTER);
+
+        JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        filaBoton.add(btnRegistrar);
+        contenedor.add(filaBoton, BorderLayout.SOUTH);
+
+        return contenedor;
+    }
+
+    /** Refresca la tabla mostrando todos los circuitos del servicio. */
+    private void actualizarTabla() {
+
+        modelo.setRowCount(0);
 
         for (Circuito circuito : circuitoServicio.listarCircuitos()) {
 
-            modeloLista.addElement(circuito.getNombre() + " | " + circuito.getKilometros() + " km | " + circuito.getUbicacion());
+            modelo.addRow(new Object[]{circuito.getNombre(), circuito.getKilometros(), circuito.getUbicacion()});
 
         }
-
     }
 
     /** Vacía los campos de texto del formulario. */
@@ -193,13 +227,6 @@ public class VentanaCircuitos extends JFrame {
         txtNombre.setText("");
         txtKilometros.setText("");
         txtUbicacion.setText("");
-
-    }
-
-    /** Extrae el nombre real de un elemento de la lista (texto antes del primer '|'). */
-    private String extraerNombre(String elemento) {
-
-        return elemento.split("\\|")[0].trim();
 
     }
 
