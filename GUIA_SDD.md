@@ -74,7 +74,14 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 17/08/2026  | Fase 0.2: corrección del EDT de Swing, actualizaciones de UI vía `SwingUtilities.invokeLater` | Completada |
 | 17/08/2026  | Fase 0.3: clima consultado una sola vez por carrera (`consultarClima` + `simularVuelta` con clima) | Completada |
 | 17/08/2026  | Fase 0.4: barra de progreso con progreso real y etiquetas ("Vuelta X de Y", "Carrera finalizada") | Completada |
-| 17/08/2026  | Fase 0.5: pendiente de cierre (restaurar flag de interrupción y limpiar marcadores IA de comentarios) | Pendiente |
+| 17/08/2026  | Fase 1: creación de puertos de salida de repositorios (Circuito, Piloto, Vehiculo) | Completada |
+| 17/08/2026  | Fase 1: implementación de repositorios en memoria (HashMap) | Completada |
+| 17/08/2026  | Fase 1: puertos de entrada y servicios CRUD con inyección de repositorios | Completada |
+| 17/08/2026  | Fase 1: cableado de repositorios y servicios en `Main` con datos de prueba | Completada |
+| 17/08/2026  | Fase 2: `VentanaPrincipal` de navegación conectada en `Main` | Completada |
+| 17/08/2026  | Fase 2: ventanas CRUD de Circuitos, Pilotos y Vehículos | Completada |
+| 17/08/2026  | Fase 2: `VentanaSimulacion` integrada con circuitos y vehículos registrados | Completada |
+| 17/08/2026  | Fase 0.5: flag de interrupción restaurado; pendiente limpiar marcadores IA de comentarios | Pendiente |
 
 ---
 
@@ -87,9 +94,9 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Alta      | Definir estructura de clases (Circuito, Piloto, Vehiculo) | Completada | - |
 | Alta      | Simulación base: motor de vueltas, clima vía API y UI Swing | Completada | Estructura de clases |
 | Alta      | Fase 0: correcciones de unidades, EDT, clima por carrera y barra de progreso | Completada | Simulación base |
-| Media     | Fase 1: repositorios en memoria (HashMap) y puertos de salida | Pendiente | Simulación base |
-| Media     | Fase 1: puertos de entrada y servicios CRUD (Circuito, Piloto, Vehiculo) | Pendiente | Repositorios |
-| Baja      | Fase 2: interfaz de administración con navegación y CRUD | Pendiente | Servicios CRUD |
-| Baja      | Fase 2: simulación con entidades seleccionables (no hardcodeadas) | Pendiente | Interfaz admin |
-| Baja      | Fase 3: pruebas unitarias (JUnit) | Pendiente | Servicios CRUD |
-| Baja      | Fase 0.5: limpieza final (flag de interrupción y marcadores IA en comentarios) | Pendiente | - |
+| Media     | Fase 1: repositorios en memoria (HashMap) y puertos de salida | Completada | Simulación base |
+| Media     | Fase 1: puertos de entrada y servicios CRUD (Circuito, Piloto, Vehiculo) | Completada | Repositorios |
+| Baja      | Fase 2: interfaz de administración con navegación y CRUD | Completada | Servicios CRUD |
+| Baja      | Fase 2: simulación con entidades seleccionables (no hardcodeadas) | Completada | Interfaz admin |
+| Baja      | Fase 3: pruebas unitarias (JUnit) | En progreso | Servicios CRUD |
+| Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Pendiente | - |
