@@ -9,13 +9,20 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * Adaptador de salida (infraestructura) que implementa ClimaServicePort.
+ * Consulta el clima real de una ubicación usando el servicio web gratuito wttr.in
+ * y traduce la respuesta a los valores que entiende el simulador ("Lluvia"/"Seco").
+ * Utiliza las APIs HttpClient y Jackson de Java.
+ */
 public class ClimaHttpAdapter implements ClimaServicePort {
 
+    /** Consulta el clima actual de la ubicación dada. */
     @Override
     public String obtenerClima(String ubicacion) {
         // 1. Construir la URL del servicio climático wttr.in (formato JSON 'j1')
         String url = "https://wttr.in/" + ubicacion + "?format=j1";
-        
+
         // 2. Crear el cliente y la petición HTTP de Java
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -42,8 +49,8 @@ public class ClimaHttpAdapter implements ClimaServicePort {
                     .asText();
 
             // 5. Traducir la respuesta al lenguaje de nuestro simulador ("Lluvia" o "Seco") [381.1]
-            if (descripcionClima.toLowerCase().contains("rain") || 
-                descripcionClima.toLowerCase().contains("shower") || 
+            if (descripcionClima.toLowerCase().contains("rain") ||
+                descripcionClima.toLowerCase().contains("shower") ||
                 descripcionClima.toLowerCase().contains("drizzle")) {
                 return "Lluvia";
             } else {

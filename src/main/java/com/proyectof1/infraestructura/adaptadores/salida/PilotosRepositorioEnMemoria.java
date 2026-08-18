@@ -8,10 +8,16 @@ import java.util.Map;
 import com.proyectof1.aplicacion.puertos.salida.PilotosRepositorio;
 import com.proyectof1.dominio.Piloto;
 
+/**
+ * Adaptador de salida (infraestructura) que implementa PilotosRepositorio.
+ * Almacena los pilotos en memoria usando un HashMap, donde la clave es el nombre.
+ */
 public class PilotosRepositorioEnMemoria implements PilotosRepositorio {
 
+    // Estructura en memoria: nombre del piloto como clave, Piloto como valor.
     private final Map<String, Piloto> pilotos = new HashMap<>();
 
+    /** Inserta o actualiza un piloto usando su nombre como clave. */
     @Override
     public void guardar(Piloto piloto) {
 
@@ -19,6 +25,7 @@ public class PilotosRepositorioEnMemoria implements PilotosRepositorio {
 
     }
 
+    /** Devuelve una copia de la lista de todos los pilotos. */
     @Override
     public List<Piloto> listarTodos() {
 
@@ -26,6 +33,7 @@ public class PilotosRepositorioEnMemoria implements PilotosRepositorio {
 
     }
 
+    /** Obtiene un piloto por nombre o null si no existe. */
     @Override
     public Piloto buscarPorNombre(String nombre) {
 
@@ -33,6 +41,7 @@ public class PilotosRepositorioEnMemoria implements PilotosRepositorio {
 
     }
 
+    /** Elimina un piloto por nombre. Devuelve true si existía y se eliminó. */
     @Override
     public boolean eliminarPorNombre(String nombre) {
 
