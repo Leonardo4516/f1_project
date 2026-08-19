@@ -55,7 +55,9 @@ public class ClimaHttpAdapter implements ClimaServicePort {
             // 5. Traducir la respuesta al lenguaje de nuestro simulador ("Lluvia" o "Seco") [381.1]
             if (descripcionClima.toLowerCase().contains("rain") ||
                 descripcionClima.toLowerCase().contains("shower") ||
-                descripcionClima.toLowerCase().contains("drizzle")) {
+                descripcionClima.toLowerCase().contains("drizzle") ||
+                descripcionClima.toLowerCase().contains("thunder") ||
+                descripcionClima.toLowerCase().contains("storm")) {
                 return "Lluvia";
             } else {
                 return "Seco";
