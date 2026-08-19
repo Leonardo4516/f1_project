@@ -1,45 +1,77 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
+import com.proyectof1.aplicacion.servicios.CarreraEnVivo;
+import com.proyectof1.aplicacion.servicios.CarreraEnVivo.AutoEnCarrera;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 import com.proyectof1.dominio.Circuito;
 import com.proyectof1.dominio.CompuestoNeumatico;
 import com.proyectof1.dominio.ConfiguracionCarrera;
+import com.proyectof1.dominio.ResultadoCarrera;
+import com.proyectof1.dominio.ResultadoParticipante;
 import com.proyectof1.dominio.Vehiculo;
 
 /**
  * Ventana de simulación de carreras (adaptador de entrada en Swing).
- * Permite configurar la carrera (circuito, vehículo, clima, compuesto de
- * neumáticos y vueltas), ver la parrilla de salida tras una clasificación
- * y correr una carrera de un vehículo con telemetría en tiempo real.
+ * Permite configurar la carrera (circuito, clima, compuesto de neumáticos y
+ * vueltas), ver la parrilla de salida tras una clasificación y correr una
+ * carrera en vivo con toda la parrilla: clasificación actualizada por tick,
+ * eventos (paradas, abandonos, vuelta rápida) y resultado final con el
+ * ganador. Mantiene la arquitectura hexagonal: toda la lógica vive en
+ * {@link CarreraEnVivo} (capa de aplicación) y esta ventana solo presenta.
  */
 public class VentanaSimulacion extends JFrame {
+
+    // Segundos simulados que se avanzan en cada tick de la interfaz (ritmo de la demo).
+    private static final double PASO_SIMULADO = 10.0;
+
+    // Pausa real entre ticks para que el ojo pueda seguir la carrera.
+    private static final int ESPERA_TICK_MS = 500;
+
+    // Colores temáticos propios de la ventana (abandonos y vuelta rápida).
+    private static final Color COLOR_DNF = new Color(0xFF6B5E);
+    private static final Color COLOR_VUELTA_RAPIDA = new Color(0xF7C948);
 
     // Servicios inyectados.
     private final CircuitoServicio circuitoServicio;
     private final VehiculoServicio vehiculoServicio;
     private final SimulacionService simulacionService;
 
-    // Desplegables para elegir circuito, vehículo y condiciones.
+    // Desplegables para elegir circuito y condiciones.
     private JComboBox<Circuito> comboCircuitos;
-    private JComboBox<Vehiculo> comboVehiculos;
     private JComboBox<String> comboClima;
     private JComboBox<CompuestoNeumatico> comboCompuesto;
     private JComboBox<Integer> comboVueltas;
@@ -51,11 +83,19 @@ public class VentanaSimulacion extends JFrame {
     // Barra de progreso que muestra el avance de la carrera.
     private JProgressBar barProgreso;
 
-    // Área de texto donde se muestran los resultados de cada vuelta.
-    private JTextArea areaTexto;
+    // Tabla con la clasificación en vivo y su modelo (no editable).
+    private JTable tablaRanking;
+    private DefaultTableModel modeloRanking;
 
-    // Parrilla de salida calculada en la clasificación (para futuras carreras).
+    // Registro de eventos de la carrera con colores temáticos.
+    private JTextPane areaEventos;
+
+    // Parrilla de salida calculada en la clasificación (si no se hizo, se
+    // genera automáticamente al iniciar la carrera).
     private List<Vehiculo> parrillaActual;
+
+    // Motor de la carrera en curso (null fuera de una carrera).
+    private CarreraEnVivo carrera;
 
     /**
      * Constructor de la ventana. Recibe los servicios y valida que no sean nulos.
@@ -74,7 +114,7 @@ public class VentanaSimulacion extends JFrame {
 
         // Configuración básica de la ventana.
         setTitle("Simulador de Fórmula 1");
-        setSize(700, 560);
+        setSize(880, 640);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -84,23 +124,21 @@ public class VentanaSimulacion extends JFrame {
         cabecera.add(TemaF1.titulo("Simulador de Fórmula 1"));
         add(cabecera, BorderLayout.NORTH);
 
-        // ----- Zona central: progreso arriba + telemetría debajo. -----
-        JPanel telemetria = new JPanel(new BorderLayout());
+        // ----- Zona central: progreso arriba, ranking y eventos debajo. -----
+        JPanel zonaCentral = new JPanel(new BorderLayout());
 
         barProgreso = new JProgressBar(0, 100);
         barProgreso.setStringPainted(true);
         barProgreso.setString("Configura tu carrera y presiona Iniciar");
-        telemetria.add(barProgreso, BorderLayout.NORTH);
+        zonaCentral.add(barProgreso, BorderLayout.NORTH);
 
-        areaTexto = new JTextArea(14, 46);
-        areaTexto.setEditable(false);
-        areaTexto.setLineWrap(true);
-        areaTexto.setWrapStyleWord(true);
-        areaTexto.setFont(new java.awt.Font(java.awt.Font.MONOSPACED, java.awt.Font.PLAIN, 13));
-        TemaF1.conBorde(areaTexto);
-        telemetria.add(new JScrollPane(areaTexto), BorderLayout.CENTER);
+        JSplitPane panelCentral = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                construirPanelRanking(), construirPanelEventos());
+        panelCentral.setResizeWeight(0.6);
+        panelCentral.setBorder(null);
+        zonaCentral.add(panelCentral, BorderLayout.CENTER);
 
-        add(telemetria, BorderLayout.CENTER);
+        add(zonaCentral, BorderLayout.CENTER);
 
         // ----- Zona sur: configuración y botones. -----
         JPanel configuracion = new JPanel();
@@ -114,16 +152,63 @@ public class VentanaSimulacion extends JFrame {
         // ---- Acciones. ----
         conectarAcciones();
 
-        // Mensaje de bienvenida y carga inicial de la tabla de selección.
-        areaTexto.append("Bienvenido al simulador.\n");
-        areaTexto.append("1. Elige circuito y vehículo.\n");
-        areaTexto.append("2. Define clima, compuesto y vueltas.\n");
-        areaTexto.append("3. Ejecuta la clasificación para ver la parrilla.\n");
-        areaTexto.append("4. Presiona Iniciar carrera.\n\n");
+        // Mensaje de bienvenida con las instrucciones del nuevo flujo.
+        anadirEvento("Bienvenido al simulador.", TemaF1.TEXTO);
+        anadirEvento("1. Elige circuito, clima, compuesto y vueltas.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("2. Ejecuta la clasificación para definir la parrilla.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("3. Presiona Iniciar carrera: corren todos los autos en vivo.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
     }
 
-    /** Construye la primera fila: selección de circuito y vehículo. */
+    /** Construye el panel superior del centro: tabla de clasificación en vivo. */
+    private JPanel construirPanelRanking() {
+
+        JPanel panel = new JPanel(new BorderLayout());
+
+        modeloRanking = new DefaultTableModel(
+                new String[]{"Pos", "Escudería", "Piloto", "Gap", "Estado"}, 0) {
+
+            @Override
+            public boolean isCellEditable(int fila, int columna) {
+                return false;
+            }
+        };
+
+        tablaRanking = new JTable(modeloRanking);
+        tablaRanking.setRowHeight(24);
+        tablaRanking.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaRanking.setFillsViewportHeight(true);
+        tablaRanking.setDefaultRenderer(Object.class, new RendererRanking());
+        tablaRanking.getColumnModel().getColumn(0).setPreferredWidth(40);
+        tablaRanking.getColumnModel().getColumn(1).setPreferredWidth(120);
+        tablaRanking.getColumnModel().getColumn(2).setPreferredWidth(130);
+        tablaRanking.getColumnModel().getColumn(3).setPreferredWidth(70);
+        tablaRanking.getColumnModel().getColumn(4).setPreferredWidth(80);
+
+        panel.add(TemaF1.subtitulo("Clasificación en vivo"), BorderLayout.NORTH);
+        panel.add(new JScrollPane(tablaRanking), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    /** Construye el panel inferior del centro: registro de eventos de la carrera. */
+    private JPanel construirPanelEventos() {
+
+        JPanel panel = new JPanel(new BorderLayout());
+
+        areaEventos = new JTextPane();
+        areaEventos.setEditable(false);
+        areaEventos.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        TemaF1.conBorde(areaEventos);
+
+        panel.add(TemaF1.subtitulo("Eventos de la carrera"), BorderLayout.NORTH);
+        panel.add(new JScrollPane(areaEventos), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    /** Construye la primera fila: selección de circuito e inicio de carrera. */
     private JPanel construirFilaSeleccion() {
 
         JPanel fila = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
@@ -133,19 +218,11 @@ public class VentanaSimulacion extends JFrame {
             comboCircuitos.addItem(circuito);
         }
 
-        comboVehiculos = new JComboBox<>();
-        for (Vehiculo vehiculo : vehiculoServicio.listarVehiculos()) {
-            comboVehiculos.addItem(vehiculo);
-        }
-
         btnIniciar = new JButton("Iniciar carrera");
         TemaF1.estilizarBoton(btnIniciar);
 
         fila.add(TemaF1.etiqueta("Circuito:"));
         fila.add(comboCircuitos);
-        fila.add(Box.createHorizontalStrut(14));
-        fila.add(TemaF1.etiqueta("Vehículo:"));
-        fila.add(comboVehiculos);
         fila.add(Box.createHorizontalStrut(14));
         fila.add(btnIniciar);
 
@@ -186,7 +263,7 @@ public class VentanaSimulacion extends JFrame {
     /** Conecta las acciones de los botones de la ventana. */
     private void conectarAcciones() {
 
-        // Clasificación: un vuelta lanzada por cada vehículo y parrilla ordenada.
+        // Clasificación: una vuelta lanzada por cada vehículo y parrilla ordenada.
         btnClasificacion.addActionListener(e -> {
 
             Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
@@ -204,16 +281,19 @@ public class VentanaSimulacion extends JFrame {
                 String clima = simulacionService.resolverClima(circuito, (String) comboClima.getSelectedItem());
                 parrillaActual = simulacionService.simularClasificacion(vehiculos, circuito, clima);
 
-                areaTexto.append("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima: " + clima + " ===\n");
+                anadirEvento("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima: " + clima + " ===", TemaF1.ROJO_F1);
 
                 for (int i = 0; i < parrillaActual.size(); i++) {
 
                     Vehiculo v = parrillaActual.get(i);
-                    areaTexto.append(String.format("%2d. %-16s (%s)\n", i + 1, v.getPiloto().getNombre(), v.getMarcaEscuderia()));
+
+                    // La pole se destaca en rojo; el resto en blanco.
+                    anadirEvento(String.format("%2d. %-16s (%s)", i + 1, v.getPiloto().getNombre(), v.getMarcaEscuderia()),
+                            i == 0 ? TemaF1.ROJO_F1 : TemaF1.TEXTO);
 
                 }
 
-                areaTexto.append("\n");
+                anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
             } catch (Exception ex) {
 
@@ -223,85 +303,334 @@ public class VentanaSimulacion extends JFrame {
             }
         });
 
-        // Iniciar carrera: simula las vueltas configuradas con el compuesto elegido.
-        btnIniciar.addActionListener(e -> {
+        // Iniciar carrera: arma la parrilla y la corre en vivo con todos los autos.
+        btnIniciar.addActionListener(e -> iniciarCarrera());
 
-            Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
-            Vehiculo vehiculo = (Vehiculo) comboVehiculos.getSelectedItem();
+    }
 
-            if (circuito == null || vehiculo == null) {
+    /** Prepara la carrera y lanza el hilo que la va avanzando por ticks. */
+    private void iniciarCarrera() {
 
-                JOptionPane.showMessageDialog(this, "No hay circuitos o vehículos registrados.");
-                return;
+        Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
 
-            }
+        if (circuito == null) {
 
-            // Construye la configuración desde los desplegables.
-            ConfiguracionCarrera config = new ConfiguracionCarrera(
-                    (Integer) comboVueltas.getSelectedItem(),
-                    (String) comboClima.getSelectedItem(),
-                    (CompuestoNeumatico) comboCompuesto.getSelectedItem());
+            JOptionPane.showMessageDialog(this, "No hay circuitos registrados.");
+            return;
 
-            // La simulación corre en otro hilo para no congelar la interfaz.
-            new Thread(() -> {
+        }
 
-                try {
+        List<Vehiculo> vehiculos = vehiculoServicio.listarVehiculos();
 
-                    // Consulta el clima: automático usa la API, si no el forzado.
-                    String clima = simulacionService.resolverClima(circuito, config.getClima());
-                    CompuestoNeumatico compuesto = config.getCompuesto();
+        if (vehiculos.isEmpty()) {
+
+            JOptionPane.showMessageDialog(this, "No hay vehículos registrados.");
+            return;
+
+        }
+
+        String clima;
+
+        try {
+
+            clima = simulacionService.resolverClima(circuito, (String) comboClima.getSelectedItem());
+
+        } catch (Exception ex) {
+
+            JOptionPane.showMessageDialog(this, "No se pudo consultar el clima: " + ex.getMessage(),
+                    "Clima", JOptionPane.ERROR_MESSAGE);
+            return;
+
+        }
+
+        // Si hubo clasificación se usa esa parrilla; si no, se ordena por vuelta lanzada.
+        List<Vehiculo> parrilla = (parrillaActual != null && !parrillaActual.isEmpty())
+                ? new ArrayList<>(parrillaActual)
+                : simulacionService.simularClasificacion(vehiculos, circuito, clima);
+
+        // Todos los autos salen con el compuesto elegido en la configuración.
+        CompuestoNeumatico compuesto = (CompuestoNeumatico) comboCompuesto.getSelectedItem();
+        Map<Vehiculo, CompuestoNeumatico> compuestos = new HashMap<>();
+
+        for (Vehiculo vehiculo : parrilla) {
+
+            compuestos.put(vehiculo, compuesto);
+
+        }
+
+        int vueltas = (Integer) comboVueltas.getSelectedItem();
+
+        carrera = new CarreraEnVivo(parrilla, circuito, clima, compuestos, vueltas);
+
+        // Se reinicia la pantalla para la nueva carrera.
+        modeloRanking.setRowCount(0);
+        areaEventos.setText("");
+        barProgreso.setValue(0);
+        barProgreso.setString("Carrera en curso...");
+
+        anadirEvento("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===", TemaF1.ROJO_F1);
+        anadirEvento("Clima: " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
+
+        deshabilitarControles(true);
+
+        // La simulación corre en otro hilo para no congelar la interfaz.
+        new Thread(() -> {
+
+            // Solo se imprimen los eventos nuevos: se recuerda cuántos se vieron.
+            int[] ultimoEvento = {0};
+
+            try {
+
+                while (!carrera.estaFinalizada()) {
+
+                    carrera.avanzar(PASO_SIMULADO);
+
+                    List<String> eventos = carrera.getEventos();
 
                     SwingUtilities.invokeLater(() -> {
 
-                        areaTexto.append("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===\n");
-                        areaTexto.append("Clima: " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + config.getVueltas() + "\n\n");
-                        barProgreso.setValue(0);
-                        barProgreso.setString("Carrera en curso...");
+                        actualizarRanking();
+
+                        for (int i = ultimoEvento[0]; i < eventos.size(); i++) {
+
+                            anadirEvento(eventos.get(i), colorDeEvento(eventos.get(i)));
+
+                        }
+
+                        ultimoEvento[0] = eventos.size();
 
                     });
 
-                    int vueltasTotales = config.getVueltas();
-
-                    for (int vuelta = 1; vuelta <= vueltasTotales; vuelta++) {
-
-                        int container = vuelta;
-
-                        double tiempoVuelta = simulacionService.simularVuelta(vehiculo, circuito, clima, compuesto);
-
-                        double desgasteActual = vehiculo.getDesgasteNeumaticos();
-
-                        SwingUtilities.invokeLater(() -> {
-
-                            areaTexto.append(String.format("Vuelta %2d - Tiempo: %5.1f s | Desgaste: %4.1f%%\n",
-                                    container, tiempoVuelta, desgasteActual));
-
-                            barProgreso.setValue(container * 100 / vueltasTotales);
-
-                            if (container == vueltasTotales) {
-
-                                barProgreso.setString("Carrera finalizada");
-
-                            } else {
-
-                                barProgreso.setString("Vuelta " + container + " de " + vueltasTotales);
-
-                            }
-                        });
-
-                        Thread.sleep(1000);
-
-                    }
-
-                } catch (InterruptedException ex) {
-
-                    Thread.currentThread().interrupt();
+                    Thread.sleep(ESPERA_TICK_MS);
 
                 }
 
-            }).start();
+                // La carrera terminó: se muestra el resultado definitivo.
+                ResultadoCarrera resultado = carrera.resultadoFinal();
 
-        });
+                SwingUtilities.invokeLater(() -> {
 
+                    actualizarRanking();
+                    mostrarResultado(resultado);
+                    deshabilitarControles(false);
+
+                });
+
+            } catch (InterruptedException ex) {
+
+                Thread.currentThread().interrupt();
+                SwingUtilities.invokeLater(() -> deshabilitarControles(false));
+
+            }
+
+        }).start();
+
+    }
+
+    /** Refresca la tabla de clasificación y la barra de progreso con el estado actual. */
+    private void actualizarRanking() {
+
+        modeloRanking.setRowCount(0);
+
+        if (carrera == null) {
+
+            return;
+
+        }
+
+        int posicion = 1;
+
+        for (AutoEnCarrera auto : carrera.ranking()) {
+
+            String estado = auto.isDnf() ? "DNF"
+                    : (auto.getDesgaste() > 85.0 ? "En boxes" : "En pista");
+
+            String gap = posicion == 1 ? "--" : String.format("%+.1f s", carrera.gapAlLider(auto));
+
+            modeloRanking.addRow(new Object[]{
+                posicion,
+                auto.getVehiculo().getMarcaEscuderia(),
+                auto.getVehiculo().getPiloto().getNombre(),
+                gap,
+                estado
+            });
+
+            posicion++;
+
+        }
+
+        double progreso = carrera.progresoPorcentaje();
+        barProgreso.setValue((int) Math.round(progreso));
+
+        if (carrera.estaFinalizada()) {
+
+            barProgreso.setString("Carrera finalizada");
+
+        } else {
+
+            barProgreso.setString("Vuelta " + carrera.vueltaDelLider() + " de " + carrera.getVueltasTotales());
+
+        }
+    }
+
+    /** Vuelca el resultado final de la carrera en los eventos y lo muestra en un diálogo. */
+    private void mostrarResultado(ResultadoCarrera resultado) {
+
+        ResultadoParticipante ganador = resultado.ganador();
+
+        StringBuilder resumen = new StringBuilder("===== RESULTADO FINAL =====\n");
+
+        if (ganador != null) {
+
+            resumen.append("Ganador: ").append(ganador.vehiculo().getMarcaEscuderia())
+                    .append(" (").append(ganador.vehiculo().getPiloto().getNombre()).append(")\n");
+
+        }
+
+        ResultadoParticipante vueltaRapida = resultado.autorVueltaRapida();
+
+        if (vueltaRapida != null) {
+
+            resumen.append("Vuelta rápida: ").append(vueltaRapida.vehiculo().getPiloto().getNombre())
+                    .append(" (").append(vueltaRapida.vehiculo().getMarcaEscuderia()).append(")\n");
+
+        }
+
+        anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento(resumen.toString(), TemaF1.ROJO_F1);
+
+        // Clasificación final completa, todos los participantes.
+        for (ResultadoParticipante participante : resultado.participantes()) {
+
+            anadirEvento(String.format("%2d. %-14s (%s) - %s",
+                    participante.posicion(),
+                    participante.vehiculo().getMarcaEscuderia(),
+                    participante.vehiculo().getPiloto().getNombre(),
+                    participante.estado()),
+                    TemaF1.TEXTO);
+
+        }
+
+        barProgreso.setValue(100);
+
+        JOptionPane.showMessageDialog(this, resumen.toString(),
+                "Resultado de la carrera", JOptionPane.INFORMATION_MESSAGE);
+
+    }
+
+    /** Devuelve el color temático de un evento según su tipo. */
+    private Color colorDeEvento(String evento) {
+
+        if (evento.startsWith("ABANDONO:")) {
+
+            return COLOR_DNF;
+
+        }
+
+        if (evento.startsWith("Parada en boxes:")) {
+
+            // "Parada en boxes: <escudería> (<piloto>)" -> se colorea de su escudería.
+            String escuderia = evento.substring(evento.indexOf(": ") + 2, evento.indexOf(" ("));
+
+            return TemaF1.colorDeEscuderia(escuderia);
+
+        }
+
+        if (evento.startsWith("Vuelta rápida:")) {
+
+            return COLOR_VUELTA_RAPIDA;
+
+        }
+
+        return TemaF1.TEXTO;
+
+    }
+
+    /** Añade una línea de texto al área de eventos con el color indicado. */
+    private void anadirEvento(String texto, Color color) {
+
+        StyledDocument documento = areaEventos.getStyledDocument();
+        SimpleAttributeSet atributos = new SimpleAttributeSet();
+        StyleConstants.setForeground(atributos, color);
+        StyleConstants.setFontFamily(atributos, Font.MONOSPACED);
+        StyleConstants.setFontSize(atributos, 13);
+
+        try {
+
+            documento.insertString(documento.getLength(), texto + "\n", atributos);
+
+        } catch (BadLocationException ex) {
+
+            // No debería ocurrir: siempre se inserta al final del documento.
+            ex.printStackTrace();
+
+        }
+    }
+
+    /** Activa o desactiva los controles de configuración durante la carrera. */
+    private void deshabilitarControles(boolean deshabilitado) {
+
+        btnIniciar.setEnabled(!deshabilitado);
+        btnClasificacion.setEnabled(!deshabilitado);
+        comboCircuitos.setEnabled(!deshabilitado);
+        comboClima.setEnabled(!deshabilitado);
+        comboCompuesto.setEnabled(!deshabilitado);
+        comboVueltas.setEnabled(!deshabilitado);
+
+    }
+
+    /**
+     * Renderer de la tabla de clasificación con temática Fórmula 1:
+     * el líder se resalta en rojo, los abandonos en rojo apagado y las
+     * escuderías se pintan con su color oficial.
+     */
+    private class RendererRanking extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable tabla, Object valor,
+                boolean seleccion, boolean tieneFoco, int fila, int columna) {
+
+            JLabel celda = (JLabel) super.getTableCellRendererComponent(
+                    tabla, valor, seleccion, tieneFoco, fila, columna);
+
+            Object posicionValor = tabla.getModel().getValueAt(fila, 0);
+            int posicion = (posicionValor instanceof Integer) ? (Integer) posicionValor : 0;
+
+            String estado = String.valueOf(tabla.getModel().getValueAt(fila, 4));
+
+            celda.setBackground(TemaF1.PANEL);
+            celda.setForeground(TemaF1.TEXTO);
+
+            // Posición y alineación según la columna.
+            celda.setHorizontalAlignment(columna == 0 || columna == 3
+                    ? javax.swing.SwingConstants.CENTER
+                    : javax.swing.SwingConstants.LEFT);
+
+            if (posicion == 1) {
+
+                // Líder de la carrera: fila completa en rojo F1.
+                celda.setBackground(TemaF1.ROJO_F1);
+                celda.setForeground(Color.WHITE);
+
+            } else if ("DNF".equals(estado)) {
+
+                // Abandonos: fondo rojo apagado y texto claro.
+                celda.setBackground(new Color(0x2A1A1A));
+                celda.setForeground(COLOR_DNF);
+
+            }
+
+            // La columna de escudería se pinta con su color oficial.
+            if (columna == 1 && posicion != 1) {
+
+                celda.setForeground(TemaF1.colorDeEscuderia(String.valueOf(valor)));
+
+            }
+
+            return celda;
+
+        }
     }
 
 }
