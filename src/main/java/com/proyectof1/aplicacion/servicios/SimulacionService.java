@@ -148,12 +148,13 @@ public class SimulacionService {
     public List<Vehiculo> simularClasificacion(List<Vehiculo> vehiculos, Circuito circuito, String clima) {
 
         // Se calcula un tiempo por vehículo antes de ordenar para no repetir
-        // la vuelta lanzada durante la comparación del ordenamiento.
+        // la vuelta lanzada durante la comparación del ordenamiento. Se proyecta
+        // con el desgaste actual para no modificar el estado de los vehículos.
         Map<Vehiculo, Double> tiempos = new HashMap<>();
 
         for (Vehiculo vehiculo : vehiculos) {
 
-            double tiempo = simularVuelta(vehiculo, circuito, clima, CompuestoNeumatico.BLANDO);
+            double tiempo = proyectarVuelta(vehiculo, circuito, clima, CompuestoNeumatico.BLANDO, vehiculo.getDesgasteNeumaticos());
             tiempos.put(vehiculo, tiempo);
 
         }
