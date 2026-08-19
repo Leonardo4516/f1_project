@@ -133,8 +133,9 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Campo | Valor |
 |-------|-------|
 | Rama actual | `main` (merges de `fix/clasificacion-sin-desgaste`, `refactor/constructor-require-non-null`, `refactor/eliminar-repositorios-en-memoria`, `test/carrera-en-vivo`, `refactor/util-json-objectmapper`, `feature/paradas-en-boxes`) |
-| Últimos commits | `141b420` (paradas en boxes), `ebdf3a1` (ObjectMapper único), `193079f` (tests `CarreraEnVivo`), `b398303` (repos memoria), `8ad3134` (requireNonNull), `ec2395f` (clasificación sin desgaste) |
+| Último commit | `d728255` (merge `feature/paradas-en-boxes`); rama limpia, sin cambios sin commitear |
 | Estado general | Compila con Maven (JDK 21) y 29 tests unitarios en verde |
+| Ramas locales sin mergear | ninguna nueva; las de sesiones anteriores quedaron como histórico |
 
 **Hecho en esta sesión:**
 - Sesión A · deuda técnica:
@@ -153,3 +154,22 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 - Edición real en los CRUD (seleccionar fila → cargar formulario → actualizar) + métodos `actualizar(...)` en los puertos.
 - Validaciones de negocio: piloto único por vehículo, sin duplicados de nombre/escudería.
 - Confirmación al eliminar y búsqueda incremental en las tablas.
+
+---
+
+### ▶ Cómo retomar esta sesión (6 pasos)
+
+1. **Preparar el entorno** (el `mvn` del sistema no está en PATH):
+   ```bash
+   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+   export PATH="$JAVA_HOME/bin:$PATH"
+   MVN=/usr/share/idea/plugins/maven/lib/maven3/bin/mvn
+   ```
+2. **Verificar que todo compila y pasa** (29 tests):
+   ```bash
+   cd /home/Papi_Leo/VSCODE/JAVA/proyecto_f1 && $MVN test
+   ```
+3. **Correr la app:** ejecutar `Main` (`com.proyectof1.Main`) desde el IDE; la persistencia vive en `data/*.json`.
+4. **Convención git del repo:** cada tarea en su propia rama (`fix/…`, `refactor/…`, `test/…`, `feature/…`), un commit en estilo conventional con emoji, `$MVN test` en verde antes de mergear, y merge a `main` con `--no-ff`.
+5. **Antes de tocar código:** `git switch main && git status` para confirmar rama limpia en `main`.
+6. **Al cerrar cada sesión:** actualizar este SDD (historial → inventario de tareas → checkpoint con rama, último commit y siguientes pasos).
