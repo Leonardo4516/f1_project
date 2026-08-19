@@ -81,7 +81,9 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 17/08/2026  | Fase 2: `VentanaPrincipal` de navegación conectada en `Main` | Completada |
 | 17/08/2026  | Fase 2: ventanas CRUD de Circuitos, Pilotos y Vehículos | Completada |
 | 17/08/2026  | Fase 2: `VentanaSimulacion` integrada con circuitos y vehículos registrados | Completada |
-| 17/08/2026  | Fase 0.5: flag de interrupción restaurado; pendiente limpiar marcadores IA de comentarios | Pendiente |
+| 18/08/2026  | Fase 4: motor de carrera en vivo multi-auto (`CarreraEnVivo`) con desgaste, paradas en boxes, abandonos (DNF) y vuelta rápida | Completada |
+| 18/08/2026  | Fase 4: `VentanaSimulacion` con carrera en vivo: ranking en vivo, eventos con colores F1 y resultado final | Completada |
+| 18/08/2026  | Fase 0.5: flag de interrupción restaurado; pendiente limpiar marcadores IA de comentarios | Pendiente |
 
 ---
 
@@ -99,4 +101,35 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Baja      | Fase 2: interfaz de administración con navegación y CRUD | Completada | Servicios CRUD |
 | Baja      | Fase 2: simulación con entidades seleccionables (no hardcodeadas) | Completada | Interfaz admin |
 | Baja      | Fase 3: pruebas unitarias (JUnit) | En progreso | Servicios CRUD |
+| Baja      | Fase 4: carrera en vivo con toda la parrilla (ranking, eventos y resultado) | Completada | Simulación + clasificación |
+| Baja      | Fase 4: historial de carreras / persistencia de resultados | Pendiente | Carrera en vivo |
 | Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Pendiente | - |
+| Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
+
+---
+
+## 5. Punto de Control (Checkpoint)
+
+> **Regla de trabajo:** al finalizar cada sesión (o cuando se agoten los tokens), se actualiza
+> esta sección con el estado exacto del proyecto para poder retomarlo en la próxima sesión
+> sin perder el hilo. Se registran: rama actual, trabajo hecho, pendientes y próximos pasos.
+
+### Estado al cierre de la sesión 18/08/2026
+
+| Campo | Valor |
+|-------|-------|
+| Rama actual | `main` (después del merge de `feature/carrera-en-vivo`) |
+| Últimos commits | `d55a91c` (carrera en vivo GUI), `be6c49a` (motor multi-auto) |
+| Estado general | Compila (javac) y 13 tests unitarios en verde |
+
+**Hecho en esta sesión:**
+- Motor de carrera en vivo `CarreraEnVivo` (multi-auto) + registros `ResultadoCarrera`/`ResultadoParticipante`.
+- Refactor de `SimulacionService.proyectarVuelta` (permite proyectar sin mutar el vehículo).
+- `VentanaSimulacion` corre toda la parrilla en vivo: tabla de clasificación con colores F1,
+  área de eventos (paradas, abandonos, vuelta rápida) y diálogo de resultado final.
+- `VentanaSimulacion` ya no requiere elegir un solo vehículo; usa la parrilla de la clasificación.
+
+**Pendiente / próximo paso sugerido:**
+- Pruebas unitarias para `CarreraEnVivo` (semilla fija `Random(42)` facilita tests de ranking/DNF/paradas).
+- Fase 4: historial de carreras (persistir `ResultadoCarrera`, p. ej. en JSON).
+- Fase 0.5: limpiar marcadores IA de comentarios en todo el código.
