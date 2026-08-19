@@ -79,8 +79,33 @@ public class SimulacionService {
      */
     public double simularVuelta(Vehiculo vehiculo, Circuito circuito, String clima, CompuestoNeumatico compuesto) {
 
+        // Se proyecta el tiempo con el desgaste actual del vehículo.
+        double tiempoCalculado = proyectarVuelta(vehiculo, circuito, clima, compuesto, vehiculo.getDesgasteNeumaticos());
+
+        // Cada vuelta aumenta el desgaste según el compuesto, sin superar el 100%.
+        double nuevoDesgaste = Math.min(vehiculo.getDesgasteNeumaticos() + compuesto.getDesgastePorVuelta(), 100.0);
+        vehiculo.setDesgasteNeumaticos(nuevoDesgaste);
+
+        return tiempoCalculado;
+    }
+
+    /**
+     * Proyecta el tiempo (en segundos) de una vuelta sin modificar el estado
+     * del vehículo. El desgaste se pasa como parámetro, lo que permite al
+     * motor de carrera simular escenarios (paradas, repostajes) sin tocar la
+     * entidad original. La fórmula es la misma que en simularVuelta.
+     *
+     * @param vehiculo  Vehículo que participa.
+     * @param circuito  Circuito donde se corre.
+     * @param clima     Estado del clima.
+     * @param compuesto Compuesto de neumáticos montado en el vehículo.
+     * @param desgaste  Desgaste de neumáticos con el que proyectar la vuelta (0-100).
+     * @return Tiempo estimado de la vuelta en segundos.
+     */
+    public double proyectarVuelta(Vehiculo vehiculo, Circuito circuito, String clima, CompuestoNeumatico compuesto, double desgaste) {
+
         // Cada 100% de desgaste resta 5 km/h a la velocidad máxima.
-        double penalizacionDesgaste = vehiculo.getDesgasteNeumaticos() * 0.05;
+        double penalizacionDesgaste = desgaste * 0.05;
 
         // Velocidad efectiva: máxima - pérdida del compuesto - desgaste.
         double velocidadEfectiva = vehiculo.getVelocidadMaxima() - compuesto.getPerdidaVelocidad() - penalizacionDesgaste;
@@ -107,10 +132,6 @@ public class SimulacionService {
             tiempoCalculado += penalizacionLluvia;
 
         }
-
-        // Cada vuelta aumenta el desgaste según el compuesto, sin superar el 100%.
-        double nuevoDesgaste = Math.min(vehiculo.getDesgasteNeumaticos() + compuesto.getDesgastePorVuelta(), 100.0);
-        vehiculo.setDesgasteNeumaticos(nuevoDesgaste);
 
         return tiempoCalculado;
     }
