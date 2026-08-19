@@ -94,6 +94,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 19/08/2026  | Sesión A: eliminados repositorios en memoria sin uso; javadoc de puertos apunta a los JSON | Completada |
 | 19/08/2026  | Sesión A: `CarreraEnVivoTest` con 13 pruebas (invariantes + semilla fija `Random(42)`) | Completada |
 | 19/08/2026  | Sesión A: `ObjectMapper` único reutilizable en `UtilJson` | Completada |
+| 19/08/2026  | Paradas estratégicas: cada auto entra al pit-lane (deja de recorrer metros 28 s), sale con neumáticos nuevos y la UI lo muestra como "En pits" | Completada |
 
 ---
 
@@ -116,6 +117,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Baja      | Fase 4: historial de carreras / persistencia de resultados | Pendiente | Carrera en vivo |
 | Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Completada | - |
 | Media     | Sesión A: deuda técnica (clasificación sin desgaste, `requireNonNull`, limpieza) | Completada | - |
+| Media     | Paradas estratégicas: plan por auto en el ecuador de la carrera + parada de emergencia por neumáticos, con tiempo real en pit-lane | Completada | Carrera en vivo |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
 
 ---
@@ -130,16 +132,22 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merges de `fix/clasificacion-sin-desgaste`, `refactor/constructor-require-non-null`, `refactor/eliminar-repositorios-en-memoria`, `test/carrera-en-vivo`, `refactor/util-json-objectmapper`) |
-| Últimos commits | `ebdf3a1` (ObjectMapper único), `193079f` (tests `CarreraEnVivo`), `b398303` (repos memoria), `8ad3134` (requireNonNull), `ec2395f` (clasificación sin desgaste) |
-| Estado general | Compila con Maven (JDK 21) y 26 tests unitarios en verde |
+| Rama actual | `main` (merges de `fix/clasificacion-sin-desgaste`, `refactor/constructor-require-non-null`, `refactor/eliminar-repositorios-en-memoria`, `test/carrera-en-vivo`, `refactor/util-json-objectmapper`, `feature/paradas-en-boxes`) |
+| Últimos commits | `141b420` (paradas en boxes), `ebdf3a1` (ObjectMapper único), `193079f` (tests `CarreraEnVivo`), `b398303` (repos memoria), `8ad3134` (requireNonNull), `ec2395f` (clasificación sin desgaste) |
+| Estado general | Compila con Maven (JDK 21) y 29 tests unitarios en verde |
 
-**Hecho en esta sesión (Sesión A · deuda técnica):**
-- `simularClasificacion` ya **no modifica el desgaste** de los vehículos (usa `proyectarVuelta`); test que lo garantiza.
-- Inyección por constructor migrada a `Objects.requireNonNull` (mismo mensaje; ahora lanza `NullPointerException` en vez de `IllegalArgumentException`; nada en el código dependía del tipo).
-- Eliminados los 3 repositorios en memoria (dead code); javadoc de puertos actualizado a las implementaciones JSON.
-- `CarreraEnVivoTest`: 13 pruebas sobre invariantes usando la semilla fija `Random(42)`.
-- `UtilJson` reutiliza una única instancia de `ObjectMapper`.
+**Hecho en esta sesión:**
+- Sesión A · deuda técnica:
+  - `simularClasificacion` ya **no modifica el desgaste** de los vehículos (usa `proyectarVuelta`); test que lo garantiza.
+  - Inyección por constructor migrada a `Objects.requireNonNull` (10 clases).
+  - Eliminados los 3 repositorios en memoria (dead code); javadoc de puertos actualizado a los JSON.
+  - `CarreraEnVivoTest`: pruebas sobre invariantes con semilla fija `Random(42)`.
+  - `UtilJson` reutiliza una única instancia de `ObjectMapper`.
+- Paradas en boxes («más simulación»):
+  - Cada auto planifica 1 parada estratégica (2 si son 30+ vueltas) en una ventana alrededor del ecuador (0.4-0.7 de la carrera), con la misma semilla → reproducible.
+  - Durante la parada (~28 s) el auto **deja de recorrer metros** en el pit-lane y sale con neumáticos nuevos (desgaste a 0). En la UI el estado muestra "En pits".
+  - Si el neumático se destruye (>85% de desgaste) entra igualmente a boxes como parada de emergencia.
+  - Eventos de entrada y salida de boxes en el área de eventos, coloreados por escudería.
 
 **Pendiente / próximo paso sugerido (Sesión B):**
 - Edición real en los CRUD (seleccionar fila → cargar formulario → actualizar) + métodos `actualizar(...)` en los puertos.
