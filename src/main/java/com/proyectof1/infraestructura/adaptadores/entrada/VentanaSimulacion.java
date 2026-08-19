@@ -255,7 +255,7 @@ public class VentanaSimulacion extends JFrame {
 
         JPanel fila = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
 
-        etiquetaClima = TemaF1.etiqueta("Clima: --");
+        etiquetaClima = TemaF1.etiqueta("--");
 
         comboCompuesto = new JComboBox<>(CompuestoNeumatico.values());
         comboCompuesto.setSelectedItem(CompuestoNeumatico.MEDIO);
@@ -301,7 +301,7 @@ public class VentanaSimulacion extends JFrame {
                 String clima = simulacionService.resolverClima(circuito, ConfiguracionCarrera.CLIMA_AUTO);
                 parrillaActual = simulacionService.simularClasificacion(vehiculos, circuito, clima);
 
-                anadirEvento("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima real: " + clima + " ===", TemaF1.ROJO_F1);
+                anadirEvento("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima: " + clima + " ===", TemaF1.ROJO_F1);
 
                 for (int i = 0; i < parrillaActual.size(); i++) {
 
@@ -389,7 +389,7 @@ public class VentanaSimulacion extends JFrame {
         barProgreso.setString("Carrera en curso...");
 
         anadirEvento("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===", TemaF1.ROJO_F1);
-        anadirEvento("Clima real (wttr.in): " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("Clima: " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
         deshabilitarControles(true);
@@ -611,14 +611,14 @@ public class VentanaSimulacion extends JFrame {
 
         if (circuito == null) {
 
-            etiquetaClima.setText("Clima: --");
+            etiquetaClima.setText("--");
             return;
 
         }
 
         // Se marca esta consulta como la vigente.
         int generacion = ++consultaClimaId;
-        etiquetaClima.setText("Clima: Consultando...");
+        etiquetaClima.setText("Consultando...");
 
         new Thread(() -> {
 
@@ -630,7 +630,7 @@ public class VentanaSimulacion extends JFrame {
                 // nueva, esta respuesta ya no interesa.
                 if (generacion == consultaClimaId && circuito == comboCircuitos.getSelectedItem()) {
 
-                    etiquetaClima.setText("Clima real (wttr.in): " + clima);
+                    etiquetaClima.setText(clima);
 
                 }
             });
