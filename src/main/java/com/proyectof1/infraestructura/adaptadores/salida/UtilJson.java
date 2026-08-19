@@ -20,6 +20,9 @@ final class UtilJson {
         // Clase estática, no se instancia.
     }
 
+    // Una única instancia reutilizable: Jackson es costoso de crear y es thread-safe.
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     /**
      * Lee una lista de objetos JSON desde un archivo.
      * Si el archivo no existe o la lectura falla, devuelve una lista vacía.
@@ -32,9 +35,8 @@ final class UtilJson {
                 return new ArrayList<>();
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            CollectionType tipoLista = mapper.getTypeFactory().constructCollectionType(List.class, tipo);
-            return mapper.readValue(ruta.toFile(), tipoLista);
+            CollectionType tipoLista = MAPPER.getTypeFactory().constructCollectionType(List.class, tipo);
+            return MAPPER.readValue(ruta.toFile(), tipoLista);
 
         } catch (IOException e) {
 
@@ -57,8 +59,7 @@ final class UtilJson {
                 Files.createDirectories(padre);
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writerWithDefaultPrettyPrinter().writeValue(ruta.toFile(), contenido);
+            MAPPER.writerWithDefaultPrettyPrinter().writeValue(ruta.toFile(), contenido);
 
         } catch (IOException e) {
 
