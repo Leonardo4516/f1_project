@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.Objects;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -66,14 +67,10 @@ public class VentanaVehiculos extends JFrame {
      */
     public VentanaVehiculos(VehiculoServicio vehiculoServicio, PilotoServicio pilotoServicio) {
 
-        if (vehiculoServicio == null || pilotoServicio == null) {
-
-            throw new IllegalArgumentException("Los servicios de vehículo y piloto no pueden ser nulos.");
-
-        }
-
-        this.vehiculoServicio = vehiculoServicio;
-        this.pilotoServicio = pilotoServicio;
+        this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio,
+                "Los servicios de vehículo y piloto no pueden ser nulos.");
+        this.pilotoServicio = Objects.requireNonNull(pilotoServicio,
+                "Los servicios de vehículo y piloto no pueden ser nulos.");
 
         // Configuración básica de la ventana.
         setTitle("Administración de Vehículos");

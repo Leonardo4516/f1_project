@@ -3,6 +3,7 @@ package com.proyectof1.infraestructura.adaptadores.entrada;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.Objects;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -49,13 +50,8 @@ public class VentanaCircuitos extends JFrame {
      */
     public VentanaCircuitos(CircuitoServicio circuitoServicio) {
 
-        if (circuitoServicio == null) {
-
-            throw new IllegalArgumentException("El servicio de circuitos no puede ser nulo.");
-
-        }
-
-        this.circuitoServicio = circuitoServicio;
+        this.circuitoServicio = Objects.requireNonNull(circuitoServicio,
+                "El servicio de circuitos no puede ser nulo.");
 
         // Configuración básica de la ventana.
         setTitle("Administración de Circuitos");

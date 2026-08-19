@@ -1,6 +1,7 @@
 package com.proyectof1.aplicacion.servicios;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.aplicacion.puertos.salida.PilotosRepositorio;
@@ -22,15 +23,9 @@ public class PilotoServicioImpl implements PilotoServicio {
      */
     public PilotoServicioImpl(PilotosRepositorio pilotosRepositorio) {
 
-        if (pilotosRepositorio != null) {
+        this.pilotosRepositorio = Objects.requireNonNull(pilotosRepositorio,
+                "El repositorio de pilotos no puede ser nulo.");
 
-            this.pilotosRepositorio = pilotosRepositorio;
-
-        } else {
-
-            throw new IllegalArgumentException("El repositorio de pilotos no puede ser nulo.");
-
-        }
     }
 
     /** Crea la entidad Piloto y la guarda en el repositorio. */
