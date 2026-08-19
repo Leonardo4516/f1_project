@@ -7,7 +7,7 @@ import com.proyectof1.dominio.Circuito;
 /**
  * Puerto de salida que define cómo se guardan y consultan los circuitos.
  * La capa de aplicación depende de esta interfaz; la persistencia real
- * (en este caso, en memoria) la implementa CircuitosRepositorioEnMemoria.
+ * (archivo JSON) la implementa CircuitosRepositorioJson.
  */
 public interface CircuitosRepositorio {
 
