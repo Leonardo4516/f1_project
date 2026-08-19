@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,9 +73,15 @@ public class VentanaSimulacion extends JFrame {
 
     // Desplegables para elegir circuito y condiciones.
     private JComboBox<Circuito> comboCircuitos;
-    private JComboBox<String> comboClima;
     private JComboBox<CompuestoNeumatico> comboCompuesto;
     private JComboBox<Integer> comboVueltas;
+
+    // Etiqueta que muestra el clima real que devolvió la API para la zona del circuito.
+    private JLabel etiquetaClima;
+
+    // Contador para descartar consultas de clima obsoletas (si el usuario cambia
+    // de circuito rápido, la respuesta de un circuito anterior no pisa la actual).
+    private int consultaClimaId;
 
     // Botones de acción.
     private JButton btnIniciar;
@@ -154,10 +161,14 @@ public class VentanaSimulacion extends JFrame {
 
         // Mensaje de bienvenida con las instrucciones del nuevo flujo.
         anadirEvento("Bienvenido al simulador.", TemaF1.TEXTO);
-        anadirEvento("1. Elige circuito, clima, compuesto y vueltas.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("1. Elige circuito, compuesto y vueltas.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("   El clima se obtiene automáticamente de la zona del circuito.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("2. Ejecuta la clasificación para definir la parrilla.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("3. Presiona Iniciar carrera: corren todos los autos en vivo.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
+
+        // Consulta el clima real del circuito seleccionado por defecto.
+        actualizarClimaDelCircuito();
 
     }
 
@@ -218,6 +229,16 @@ public class VentanaSimulacion extends JFrame {
             comboCircuitos.addItem(circuito);
         }
 
+        // Al cambiar de circuito se consulta el clima real de su zona.
+        comboCircuitos.addItemListener(e -> {
+
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+
+                actualizarClimaDelCircuito();
+
+            }
+        });
+
         btnIniciar = new JButton("Iniciar carrera");
         TemaF1.estilizarBoton(btnIniciar);
 
@@ -234,8 +255,7 @@ public class VentanaSimulacion extends JFrame {
 
         JPanel fila = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
 
-        comboClima = new JComboBox<>(new String[]{ConfiguracionCarrera.CLIMA_AUTO, ConfiguracionCarrera.CLIMA_SECO, ConfiguracionCarrera.CLIMA_LLUVIA});
-        comboClima.setSelectedItem(ConfiguracionCarrera.CLIMA_AUTO);
+        etiquetaClima = TemaF1.etiqueta("Clima: --");
 
         comboCompuesto = new JComboBox<>(CompuestoNeumatico.values());
         comboCompuesto.setSelectedItem(CompuestoNeumatico.MEDIO);
@@ -247,7 +267,7 @@ public class VentanaSimulacion extends JFrame {
         TemaF1.estilizarBoton(btnClasificacion);
 
         fila.add(TemaF1.etiqueta("Clima:"));
-        fila.add(comboClima);
+        fila.add(etiquetaClima);
         fila.add(Box.createHorizontalStrut(14));
         fila.add(TemaF1.etiqueta("Compuesto:"));
         fila.add(comboCompuesto);
@@ -278,10 +298,10 @@ public class VentanaSimulacion extends JFrame {
 
             try {
 
-                String clima = simulacionService.resolverClima(circuito, (String) comboClima.getSelectedItem());
+                String clima = simulacionService.resolverClima(circuito, ConfiguracionCarrera.CLIMA_AUTO);
                 parrillaActual = simulacionService.simularClasificacion(vehiculos, circuito, clima);
 
-                anadirEvento("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima: " + clima + " ===", TemaF1.ROJO_F1);
+                anadirEvento("=== CLASIFICACIÓN (" + circuito.getNombre() + ") - Clima real: " + clima + " ===", TemaF1.ROJO_F1);
 
                 for (int i = 0; i < parrillaActual.size(); i++) {
 
@@ -333,7 +353,7 @@ public class VentanaSimulacion extends JFrame {
 
         try {
 
-            clima = simulacionService.resolverClima(circuito, (String) comboClima.getSelectedItem());
+            clima = simulacionService.resolverClima(circuito, ConfiguracionCarrera.CLIMA_AUTO);
 
         } catch (Exception ex) {
 
@@ -369,7 +389,7 @@ public class VentanaSimulacion extends JFrame {
         barProgreso.setString("Carrera en curso...");
 
         anadirEvento("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===", TemaF1.ROJO_F1);
-        anadirEvento("Clima: " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("Clima real (wttr.in): " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
         deshabilitarControles(true);
@@ -574,10 +594,48 @@ public class VentanaSimulacion extends JFrame {
         btnIniciar.setEnabled(!deshabilitado);
         btnClasificacion.setEnabled(!deshabilitado);
         comboCircuitos.setEnabled(!deshabilitado);
-        comboClima.setEnabled(!deshabilitado);
         comboCompuesto.setEnabled(!deshabilitado);
         comboVueltas.setEnabled(!deshabilitado);
 
+    }
+
+    /**
+     * Consulta el clima real (vía API) de la zona del circuito seleccionado y
+     * lo muestra en la etiqueta de clima. La consulta corre en un hilo aparte
+     * para no congelar la interfaz, y se descartan respuestas obsoletas si el
+     * usuario cambió de circuito mientras la API respondía.
+     */
+    private void actualizarClimaDelCircuito() {
+
+        Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
+
+        if (circuito == null) {
+
+            etiquetaClima.setText("Clima: --");
+            return;
+
+        }
+
+        // Se marca esta consulta como la vigente.
+        int generacion = ++consultaClimaId;
+        etiquetaClima.setText("Clima: Consultando...");
+
+        new Thread(() -> {
+
+            String clima = simulacionService.resolverClima(circuito, ConfiguracionCarrera.CLIMA_AUTO);
+
+            SwingUtilities.invokeLater(() -> {
+
+                // Si mientras tanto se eligió otro circuito o llegó una consulta más
+                // nueva, esta respuesta ya no interesa.
+                if (generacion == consultaClimaId && circuito == comboCircuitos.getSelectedItem()) {
+
+                    etiquetaClima.setText("Clima real (wttr.in): " + clima);
+
+                }
+            });
+
+        }).start();
     }
 
     /**
