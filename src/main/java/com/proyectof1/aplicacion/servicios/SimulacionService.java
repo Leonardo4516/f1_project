@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.proyectof1.aplicacion.puertos.salida.ClimaServicePort;
 import com.proyectof1.dominio.Circuito;
@@ -28,15 +29,9 @@ public class SimulacionService {
      */
     public SimulacionService(ClimaServicePort climaService) {
 
-        if (climaService != null) {
+        this.climaService = Objects.requireNonNull(climaService,
+                "El servicio de clima no puede ser nulo.");
 
-            this.climaService = climaService;
-
-        } else {
-
-            throw new IllegalArgumentException("El servicio de clima no puede ser nulo.");
-
-        }
     }
 
     /**

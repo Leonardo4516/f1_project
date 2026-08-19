@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -50,17 +51,10 @@ public class VentanaPrincipal extends JFrame {
     public VentanaPrincipal(CircuitoServicio circuitoServicio, PilotoServicio pilotoServicio,
             VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
 
-        if (circuitoServicio == null || pilotoServicio == null
-                || vehiculoServicio == null || simulacionService == null) {
-
-            throw new IllegalArgumentException("Los servicios no pueden ser nulos.");
-
-        }
-
-        this.circuitoServicio = circuitoServicio;
-        this.pilotoServicio = pilotoServicio;
-        this.vehiculoServicio = vehiculoServicio;
-        this.simulacionService = simulacionService;
+        this.circuitoServicio = Objects.requireNonNull(circuitoServicio, "Los servicios no pueden ser nulos.");
+        this.pilotoServicio = Objects.requireNonNull(pilotoServicio, "Los servicios no pueden ser nulos.");
+        this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio, "Los servicios no pueden ser nulos.");
+        this.simulacionService = Objects.requireNonNull(simulacionService, "Los servicios no pueden ser nulos.");
 
         // Configuración básica de la ventana (dashboard fijo).
         setTitle("Simulación de Fórmula 1");

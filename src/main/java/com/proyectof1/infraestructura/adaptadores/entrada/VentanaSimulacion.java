@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -109,15 +110,9 @@ public class VentanaSimulacion extends JFrame {
      */
     public VentanaSimulacion(CircuitoServicio circuitoServicio, VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
 
-        if (circuitoServicio == null || vehiculoServicio == null || simulacionService == null) {
-
-            throw new IllegalArgumentException("Los servicios no pueden ser nulos.");
-
-        }
-
-        this.circuitoServicio = circuitoServicio;
-        this.vehiculoServicio = vehiculoServicio;
-        this.simulacionService = simulacionService;
+        this.circuitoServicio = Objects.requireNonNull(circuitoServicio, "Los servicios no pueden ser nulos.");
+        this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio, "Los servicios no pueden ser nulos.");
+        this.simulacionService = Objects.requireNonNull(simulacionService, "Los servicios no pueden ser nulos.");
 
         // Configuración básica de la ventana.
         setTitle("Simulador de Fórmula 1");

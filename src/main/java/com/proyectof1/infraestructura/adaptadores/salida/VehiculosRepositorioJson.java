@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.proyectof1.aplicacion.puertos.salida.PilotosRepositorio;
 import com.proyectof1.aplicacion.puertos.salida.VehiculosRepositorio;
@@ -46,14 +47,9 @@ public class VehiculosRepositorioJson implements VehiculosRepositorio {
      */
     VehiculosRepositorioJson(Path archivo, PilotosRepositorio pilotosRepositorio) {
 
-        if (pilotosRepositorio == null) {
-
-            throw new IllegalArgumentException("El repositorio de pilotos no puede ser nulo.");
-
-        }
-
         this.archivo = archivo;
-        this.pilotosRepositorio = pilotosRepositorio;
+        this.pilotosRepositorio = Objects.requireNonNull(pilotosRepositorio,
+                "El repositorio de pilotos no puede ser nulo.");
 
         for (VehiculoDto dto : UtilJson.leer(archivo, VehiculoDto.class)) {
 

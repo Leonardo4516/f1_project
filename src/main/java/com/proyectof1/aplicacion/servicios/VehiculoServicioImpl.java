@@ -1,6 +1,7 @@
 package com.proyectof1.aplicacion.servicios;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.puertos.salida.VehiculosRepositorio;
@@ -23,15 +24,9 @@ public class VehiculoServicioImpl implements VehiculoServicio {
      */
     public VehiculoServicioImpl(VehiculosRepositorio vehiculosRepositorio) {
 
-        if (vehiculosRepositorio != null) {
+        this.vehiculosRepositorio = Objects.requireNonNull(vehiculosRepositorio,
+                "El repositorio de vehículos no puede ser nulo.");
 
-            this.vehiculosRepositorio = vehiculosRepositorio;
-
-        } else {
-
-            throw new IllegalArgumentException("El repositorio de vehículos no puede ser nulo.");
-
-        }
     }
 
     /** Crea la entidad Vehiculo y la guarda en el repositorio. */

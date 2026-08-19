@@ -1,6 +1,7 @@
 package com.proyectof1.aplicacion.servicios;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.salida.CircuitosRepositorio;
@@ -22,15 +23,9 @@ public class CircuitoServicioImpl implements CircuitoServicio {
      */
     public CircuitoServicioImpl(CircuitosRepositorio circuitosRepositorio) {
 
-        if (circuitosRepositorio != null) {
+        this.circuitosRepositorio = Objects.requireNonNull(circuitosRepositorio,
+                "El repositorio de circuitos no puede ser nulo.");
 
-            this.circuitosRepositorio = circuitosRepositorio;
-
-        } else {
-
-            throw new IllegalArgumentException("El repositorio de circuitos no puede ser nulo.");
-
-        }
     }
 
     /** Crea la entidad Circuito y la guarda en el repositorio. */

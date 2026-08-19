@@ -3,6 +3,7 @@ package com.proyectof1.infraestructura.adaptadores.entrada;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.Objects;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -49,13 +50,8 @@ public class VentanaPilotos extends JFrame {
      */
     public VentanaPilotos(PilotoServicio pilotoServicio) {
 
-        if (pilotoServicio == null) {
-
-            throw new IllegalArgumentException("El servicio de pilotos no puede ser nulo.");
-
-        }
-
-        this.pilotoServicio = pilotoServicio;
+        this.pilotoServicio = Objects.requireNonNull(pilotoServicio,
+                "El servicio de pilotos no puede ser nulo.");
 
         // Configuración básica de la ventana.
         setTitle("Administración de Pilotos");
