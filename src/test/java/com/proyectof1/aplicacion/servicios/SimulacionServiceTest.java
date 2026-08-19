@@ -94,6 +94,13 @@ class SimulacionServiceTest {
         // La lista original no se modifica.
         assertEquals("Lento", autos.get(0).getPiloto().getNombre());
 
+        // La clasificación no debe aumentar el desgaste de los vehículos.
+        for (Vehiculo auto : autos) {
+
+            assertEquals(0.0, auto.getDesgasteNeumaticos(), 0.001);
+
+        }
+
     }
 
     @Test
