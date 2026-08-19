@@ -47,7 +47,9 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Simulación   | Configuración de condiciones y ejecución de carrera |
 
 ### 2.3 Persistencia
-- Uso de `Map` / `HashMap` para persistencia temporal en memoria.
+- Persistencia real en archivos JSON dentro de `data/` (Jackson), con `HashMap` en memoria para acceso rápido.
+- Las referencias entre entidades (vehículo → piloto) se guardan por nombre y se resuelven al cargar.
+- Pendiente futuro: persistencia de resultados de carrera (historial).
 
 ---
 
@@ -86,7 +88,12 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 18/08/2026  | Fase 0.4b: clima automático por API según la zona del circuito (se quita el selector manual, se muestra el clima real al elegir el circuito y se añade thunder/storm a la detección) | Completada |
 | 18/08/2026  | Fase 0.4c: etiqueta de clima simplificada (muestra solo `Clima: Lluvia`/`Seco` con "Consultando..." mientras carga) | Completada |
 | 18/08/2026  | Fase 2: menú principal moderno con tarjetas F1, acentos de color por módulo y hover | Completada |
-| 18/08/2026  | Fase 0.5: flag de interrupción restaurado; pendiente limpiar marcadores IA de comentarios | Pendiente |
+| 18/08/2026  | Fase 0.5: flag de interrupción restaurado; pendiente limpiar marcadores IA de comentarios | Completada |
+| 19/08/2026  | Sesión A: `simularClasificacion` ya no incrementa el desgaste (usa `proyectarVuelta`) + assert en test | Completada |
+| 19/08/2026  | Sesión A: validación de inyección por constructor con `Objects.requireNonNull` (10 clases) | Completada |
+| 19/08/2026  | Sesión A: eliminados repositorios en memoria sin uso; javadoc de puertos apunta a los JSON | Completada |
+| 19/08/2026  | Sesión A: `CarreraEnVivoTest` con 13 pruebas (invariantes + semilla fija `Random(42)`) | Completada |
+| 19/08/2026  | Sesión A: `ObjectMapper` único reutilizable en `UtilJson` | Completada |
 
 ---
 
@@ -104,9 +111,11 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Baja      | Fase 2: interfaz de administración con navegación y CRUD | Completada | Servicios CRUD |
 | Baja      | Fase 2: simulación con entidades seleccionables (no hardcodeadas) | Completada | Interfaz admin |
 | Baja      | Fase 3: pruebas unitarias (JUnit) | En progreso | Servicios CRUD |
+| Baja      | Fase 3: pruebas unitarias de `CarreraEnVivo` (ranking, DNF, paradas, resultado) | Completada | Carrera en vivo |
 | Baja      | Fase 4: carrera en vivo con toda la parrilla (ranking, eventos y resultado) | Completada | Simulación + clasificación |
 | Baja      | Fase 4: historial de carreras / persistencia de resultados | Pendiente | Carrera en vivo |
-| Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Pendiente | - |
+| Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Completada | - |
+| Media     | Sesión A: deuda técnica (clasificación sin desgaste, `requireNonNull`, limpieza) | Completada | - |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
 
 ---
@@ -117,27 +126,22 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 > esta sección con el estado exacto del proyecto para poder retomarlo en la próxima sesión
 > sin perder el hilo. Se registran: rama actual, trabajo hecho, pendientes y próximos pasos.
 
-### Estado al cierre de la sesión 18/08/2026
+### Estado al cierre de la sesión 19/08/2026
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merges de `fix/etiqueta-clima` y `feature/menu-principal-moderno`) |
-| Últimos commits | `ec34543` (menú moderno), `56b935a` (etiqueta clima), `d1e490b` (clima automático) |
-| Estado general | Compila (javac) y 13 tests unitarios en verde |
+| Rama actual | `main` (merges de `fix/clasificacion-sin-desgaste`, `refactor/constructor-require-non-null`, `refactor/eliminar-repositorios-en-memoria`, `test/carrera-en-vivo`, `refactor/util-json-objectmapper`) |
+| Últimos commits | `ebdf3a1` (ObjectMapper único), `193079f` (tests `CarreraEnVivo`), `b398303` (repos memoria), `8ad3134` (requireNonNull), `ec2395f` (clasificación sin desgaste) |
+| Estado general | Compila con Maven (JDK 21) y 26 tests unitarios en verde |
 
-**Hecho en esta sesión:**
-- Motor de carrera en vivo `CarreraEnVivo` (multi-auto) + registros `ResultadoCarrera`/`ResultadoParticipante`.
-- Refactor de `SimulacionService.proyectarVuelta` (permite proyectar sin mutar el vehículo).
-- `VentanaSimulacion` corre toda la parrilla en vivo: tabla de clasificación con colores F1,
-  área de eventos (paradas, abandonos, vuelta rápida) y diálogo de resultado final.
-- `VentanaSimulacion` ya no requiere elegir un solo vehículo; usa la parrilla de la clasificación.
-- Clima automático por API (`wttr.in`): al elegir el circuito se muestra `Clima: Lluvia/Seco`
-  (con "Consultando..." mientras carga), se eliminó el selector manual de clima, y
-  `ClimaHttpAdapter` ahora detecta thunder/storm como lluvia.
-- Menú principal (`VentanaPrincipal`) modernizado: tarjetas de navegación con acento de color
-  por módulo, hover y cursor de mano; cabecera con título grande + barra roja de acento.
+**Hecho en esta sesión (Sesión A · deuda técnica):**
+- `simularClasificacion` ya **no modifica el desgaste** de los vehículos (usa `proyectarVuelta`); test que lo garantiza.
+- Inyección por constructor migrada a `Objects.requireNonNull` (mismo mensaje; ahora lanza `NullPointerException` en vez de `IllegalArgumentException`; nada en el código dependía del tipo).
+- Eliminados los 3 repositorios en memoria (dead code); javadoc de puertos actualizado a las implementaciones JSON.
+- `CarreraEnVivoTest`: 13 pruebas sobre invariantes usando la semilla fija `Random(42)`.
+- `UtilJson` reutiliza una única instancia de `ObjectMapper`.
 
-**Pendiente / próximo paso sugerido:**
-- Pruebas unitarias para `CarreraEnVivo` (semilla fija `Random(42)` facilita tests de ranking/DNF/paradas).
-- Fase 4: historial de carreras (persistir `ResultadoCarrera`, p. ej. en JSON).
-- Fase 0.5: limpiar marcadores IA de comentarios en todo el código (a la fecha no se encontraron marcadores).
+**Pendiente / próximo paso sugerido (Sesión B):**
+- Edición real en los CRUD (seleccionar fila → cargar formulario → actualizar) + métodos `actualizar(...)` en los puertos.
+- Validaciones de negocio: piloto único por vehículo, sin duplicados de nombre/escudería.
+- Confirmación al eliminar y búsqueda incremental en las tablas.
