@@ -159,7 +159,7 @@ public class VentanaSimulacion extends JFrame {
         anadirEvento("1. Elige circuito, compuesto y vueltas.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("   El clima se obtiene automáticamente de la zona del circuito.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("2. Ejecuta la clasificación para definir la parrilla.", TemaF1.TEXTO_SECUNDARIO);
-        anadirEvento("3. Presiona Iniciar carrera: corren todos los autos en vivo.", TemaF1.TEXTO_SECUNDARIO);
+        anadirEvento("3. Presiona Iniciar carrera: corren todos los autos en vivo, con paradas y abandonos.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
         // Consulta el clima real del circuito seleccionado por defecto.
@@ -459,7 +459,7 @@ public class VentanaSimulacion extends JFrame {
         for (AutoEnCarrera auto : carrera.ranking()) {
 
             String estado = auto.isDnf() ? "DNF"
-                    : (auto.getDesgaste() > 85.0 ? "En boxes" : "En pista");
+                    : auto.estaEnPits() ? "En pits" : "En pista";
 
             String gap = posicion == 1 ? "--" : String.format("%+.1f s", carrera.gapAlLider(auto));
 
@@ -543,9 +543,9 @@ public class VentanaSimulacion extends JFrame {
 
         }
 
-        if (evento.startsWith("Parada en boxes:")) {
+        if (evento.startsWith("Parada en boxes:") || evento.startsWith("Salida de boxes:")) {
 
-            // "Parada en boxes: <escudería> (<piloto>)" -> se colorea de su escudería.
+            // "X en boxes: <escudería> (<piloto>)" -> se colorea de su escudería.
             String escuderia = evento.substring(evento.indexOf(": ") + 2, evento.indexOf(" ("));
 
             return TemaF1.colorDeEscuderia(escuderia);

@@ -1,6 +1,7 @@
 package com.proyectof1.aplicacion.servicios;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,9 @@ import com.proyectof1.dominio.Vehiculo;
  * {@link #avanzar(double)}). Cada vehículo tiene su propia distancia
  * recorrida, desgaste y ritmo; los adelantamientos surgen de forma natural
  * porque quien va más rápido acumula más metros. Cada vuelta completada
- * consume neumático, puede forzar una parada en boxes y conlleva una
+ * consume neumático; en la parada estratégica planificada (o si el neumático
+ * se destruye) el auto entra al pit-lane: deja de recorrer metros durante la
+ * parada y sale con neumáticos nuevos. Cada vuelta conlleva además una
  * pequeña probabilidad de abandono (DNF).</p>
  *
  * <p>Es lógica pura: no crea hilos. La interfaz decide cada cuánto avanzar
@@ -32,6 +35,12 @@ public class CarreraEnVivo {
     public static final String ACTIVO = "En pista";
     public static final String DNF = "DNF";
     public static final String FINALIZADO = "Finalizado";
+
+    // Duración de una parada en boxes (incluye el paso por el pit-lane) en segundos.
+    private static final double DURACION_PARADA = 28.0;
+
+    // Velocidad de seguridad del pit-lane (km/h) mientras el auto está parado.
+    private static final double VELOCIDAD_CARRIL_PITS = 80.0;
 
     // Un compuesto por defecto cuando no se especifica uno por vehículo.
     private final SimulacionService simulacion;
@@ -110,6 +119,13 @@ public class CarreraEnVivo {
             autos.add(new AutoEnCarrera(vehiculo, compuesto));
 
         }
+
+        // Cada auto planifica sus paradas estratégicas (misma semilla -> reproducible).
+        for (AutoEnCarrera auto : autos) {
+
+            auto.planificarParadas(vueltas, azar);
+
+        }
     }
 
     /** Avanza la carrera la cantidad de segundos simulados indicada. */
@@ -133,6 +149,24 @@ public class CarreraEnVivo {
 
             if (auto.isDnf()) {
 
+                continue;
+
+            }
+
+            // Mientras está en boxes no recorre metros: solo se descuenta el
+            // tiempo de parada y, al salir, se registra el evento de salida.
+            if (auto.estaEnPits()) {
+
+                auto.avanzarEnPits(segundos);
+
+                if (auto.estaEnPits()) {
+
+                    continue;
+
+                }
+
+                eventos.add("Salida de boxes: " + auto.getVehiculo().getMarcaEscuderia()
+                        + " (" + auto.getVehiculo().getPiloto().getNombre() + ")");
                 continue;
 
             }
@@ -186,11 +220,14 @@ public class CarreraEnVivo {
         // El compuesto consume desgaste en cada vuelta completada.
         auto.aplicarDesgaste(auto.getCompuesto().getDesgastePorVuelta());
 
-        // Si el neumático está muy gastado se entra a boxes: se cambian (desgaste a 0)
-        // y se paga un tiempo de pérdida.
-        if (auto.getDesgaste() > 85.0) {
+        // Entrada a boxes por estrategia planificada o por neumático destrozado.
+        // La parada es un proceso real: el auto deja de recorrer metros unos
+        // segundos y sale con neumáticos nuevos.
+        boolean paradaEstrategica = auto.debePararAhora();
 
-            auto.entrarABoxes(18.0);
+        if (paradaEstrategica || auto.getDesgaste() > 85.0) {
+
+            auto.iniciarParada(DURACION_PARADA, paradaEstrategica);
             eventos.add("Parada en boxes: " + auto.getVehiculo().getMarcaEscuderia()
                     + " (" + auto.getVehiculo().getPiloto().getNombre() + ")");
 
@@ -345,6 +382,13 @@ public class CarreraEnVivo {
         private int paradas;
         private boolean dnf;
 
+        // Paradas estratégicas planificadas al inicio (vuelta 1-based en la que paran).
+        private final List<Integer> paradasPlanificadas = new ArrayList<>();
+        private int indiceParadaPlanificada;
+
+        // Tiempo restante dentro del pit-lane (0 = en pista).
+        private double segundosEnPits;
+
         AutoEnCarrera(Vehiculo vehiculo, CompuestoNeumatico compuesto) {
 
             this.vehiculo = vehiculo;
@@ -428,12 +472,62 @@ public class CarreraEnVivo {
 
         }
 
-        void entrarABoxes(double tiempoPerdido) {
+        /** Planifica las paradas estratégicas: en carreras largas se hacen dos. */
+        void planificarParadas(int vueltasTotales, Random azar) {
 
-            desgaste = 0.0;
+            int numeroParadas = vueltasTotales >= 30 ? 2 : 1;
+
+            for (int i = 0; i < numeroParadas; i++) {
+
+                // Ventana de parada alrededor del ecuador de la carrera (0.4-0.7).
+                double fraccion = 0.4 + 0.3 * azar.nextDouble();
+                paradasPlanificadas.add(Math.max(1, (int) Math.round(vueltasTotales * fraccion)));
+
+            }
+
+            Collections.sort(paradasPlanificadas);
+
+        }
+
+        /** Indica si le toca entrar a boxes por su próxima parada estratégica. */
+        boolean debePararAhora() {
+
+            return indiceParadaPlanificada < paradasPlanificadas.size()
+                    && vueltasCompletadas >= paradasPlanificadas.get(indiceParadaPlanificada);
+
+        }
+
+        /** El auto entra al pit-lane: deja de recorrer metros hasta terminar la parada. */
+        void iniciarParada(double duracion, boolean estrategica) {
+
+            if (estrategica) {
+
+                indiceParadaPlanificada++;
+
+            }
+
             paradas++;
-            tiempoTotal += tiempoPerdido;
+            segundosEnPits = duracion;
+            velocidadActualKmh = VELOCIDAD_CARRIL_PITS;
 
+        }
+
+        /** Descuenta el tiempo transcurrido en el pit-lane; al llegar a 0, sale. */
+        void avanzarEnPits(double segundos) {
+
+            segundosEnPits -= segundos;
+
+            if (segundosEnPits <= 0) {
+
+                segundosEnPits = 0.0;
+                desgaste = 0.0;
+
+            }
+        }
+
+        /** true mientras el auto esté dentro del pit-lane. */
+        public boolean estaEnPits() {
+            return segundosEnPits > 0;
         }
 
         void marcarDnf() {

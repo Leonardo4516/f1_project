@@ -263,4 +263,77 @@ class CarreraEnVivoTest {
 
     }
 
+    @Test
+    void duranteLaCarreraSeVeAlgunAutoEnPits() {
+
+        CarreraEnVivo carrera = carreraDeTres(15);
+
+        boolean vistoEnPits = false;
+        int salvaguarda = 0;
+
+        while (!carrera.estaFinalizada() && salvaguarda++ < 10_000) {
+
+            carrera.avanzar(10.0);
+
+            for (AutoEnCarrera auto : carrera.ranking()) {
+
+                if (auto.estaEnPits()) {
+
+                    vistoEnPits = true;
+
+                }
+            }
+        }
+
+        assertTrue(vistoEnPits, "Alguno de los autos debe verse dentro del pit-lane durante la carrera");
+
+    }
+
+    @Test
+    void todosLosFinalizadosCompletanAlMenosUnaParada() {
+
+        CarreraEnVivo carrera = carreraDeTres(15);
+        correrHastaElFinal(carrera);
+
+        for (ResultadoParticipante participante : carrera.resultadoFinal().participantes()) {
+
+            if ("Finalizado".equals(participante.estado())) {
+
+                assertTrue(participante.paradas() >= 1,
+                        participante.vehiculo().getMarcaEscuderia() + " debió pasar por boxes");
+
+            }
+        }
+
+    }
+
+    @Test
+    void salirDePitsReiniciaElDesgaste() {
+
+        CarreraEnVivo carrera = carreraDeTres(15);
+
+        boolean vistosConDesgasteReiniciado = false;
+        int salvaguarda = 0;
+
+        while (!carrera.estaFinalizada() && salvaguarda++ < 10_000) {
+
+            carrera.avanzar(10.0);
+
+            for (AutoEnCarrera auto : carrera.ranking()) {
+
+                // Un auto que ha completado una parada y sigue en pista debe tener
+                // los neumáticos cambiados (bajo desgaste) tras salir de boxes.
+                if (auto.getParadas() > 0 && !auto.estaEnPits() && auto.getDesgaste() < 5.0) {
+
+                    vistosConDesgasteReiniciado = true;
+
+                }
+            }
+        }
+
+        assertTrue(vistosConDesgasteReiniciado,
+                "Tras salir de boxes el auto debe correr con neumáticos nuevos (desgaste bajo)");
+
+    }
+
 }
