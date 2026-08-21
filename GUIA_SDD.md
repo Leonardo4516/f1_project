@@ -95,6 +95,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 19/08/2026  | Sesión A: `CarreraEnVivoTest` con 13 pruebas (invariantes + semilla fija `Random(42)`) | Completada |
 | 19/08/2026  | Sesión A: `ObjectMapper` único reutilizable en `UtilJson` | Completada |
 | 19/08/2026  | Paradas estratégicas: cada auto entra al pit-lane (deja de recorrer metros 28 s), sale con neumáticos nuevos y la UI lo muestra como "En pits" | Completada |
+| 21/08/2026  | Juego arcade jugable: mini-juego de carriles con control por teclado, dificultad progresiva, escudería elegible y récord en JSON | Completada |
 
 ---
 
@@ -118,6 +119,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Baja      | Fase 0.5: limpieza de marcadores IA en comentarios | Completada | - |
 | Media     | Sesión A: deuda técnica (clasificación sin desgaste, `requireNonNull`, limpieza) | Completada | - |
 | Media     | Paradas estratégicas: plan por auto en el ecuador de la carrera + parada de emergencia por neumáticos, con tiempo real en pit-lane | Completada | Carrera en vivo |
+| Alta      | Juego arcade jugable: núcleo `JuegoArcade` testable, `VentanaArcade` con control por teclado, dificultad progresiva, escudería elegible y récord en `data/record.json` | Completada | - |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
 
 ---
@@ -128,32 +130,26 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 > esta sección con el estado exacto del proyecto para poder retomarlo en la próxima sesión
 > sin perder el hilo. Se registran: rama actual, trabajo hecho, pendientes y próximos pasos.
 
-### Estado al cierre de la sesión 19/08/2026
+### Estado al cierre de la sesión 21/08/2026
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merges de `fix/clasificacion-sin-desgaste`, `refactor/constructor-require-non-null`, `refactor/eliminar-repositorios-en-memoria`, `test/carrera-en-vivo`, `refactor/util-json-objectmapper`, `feature/paradas-en-boxes`) |
-| Último commit | `d728255` (merge `feature/paradas-en-boxes`); rama limpia, sin cambios sin commitear |
-| Estado general | Compila con Maven (JDK 21) y 29 tests unitarios en verde |
+| Rama actual | `main` (merge de `feature/juego-arcade` sobre el punto de control anterior) |
+| Último commit | `5759fc3` (feat Juego arcade) + merge `--no-ff`; rama limpia |
+| Estado general | Compila con Maven (JDK 21) y 37 tests unitarios en verde |
 | Ramas locales sin mergear | ninguna nueva; las de sesiones anteriores quedaron como histórico |
 
 **Hecho en esta sesión:**
-- Sesión A · deuda técnica:
-  - `simularClasificacion` ya **no modifica el desgaste** de los vehículos (usa `proyectarVuelta`); test que lo garantiza.
-  - Inyección por constructor migrada a `Objects.requireNonNull` (10 clases).
-  - Eliminados los 3 repositorios en memoria (dead code); javadoc de puertos actualizado a los JSON.
-  - `CarreraEnVivoTest`: pruebas sobre invariantes con semilla fija `Random(42)`.
-  - `UtilJson` reutiliza una única instancia de `ObjectMapper`.
-- Paradas en boxes («más simulación»):
-  - Cada auto planifica 1 parada estratégica (2 si son 30+ vueltas) en una ventana alrededor del ecuador (0.4-0.7 de la carrera), con la misma semilla → reproducible.
-  - Durante la parada (~28 s) el auto **deja de recorrer metros** en el pit-lane y sale con neumáticos nuevos (desgaste a 0). En la UI el estado muestra "En pits".
-  - Si el neumático se destruye (>85% de desgaste) entra igualmente a boxes como parada de emergencia.
-  - Eventos de entrada y salida de boxes en el área de eventos, coloreados por escudería.
+- Juego arcade jugable (módulo nuevo, distinto a la simulación pasiva):
+  - `JuegoArcade` (capa de aplicación, sin Swing): 3 carriles, coche del jugador, obstáculos con `Random` inyectable, dificultad progresiva (sube con la puntuación: los obstáculos caen más rápido y aparecen más), puntuación, récord en memoria y detección de colisión (game over).
+  - `JuegoArcadeTest`: 8 pruebas con semilla fija (movimiento con límites, puntuación, aceleración progresiva, choque, reinicio conservando récord, récord nunca baja).
+  - `RecordJson` (infraestructura/salida): persiste el récord en `data/record.json` con el patrón DTO + `UtilJson`; `guardar()` solo actualiza si supera el récord.
+  - `VentanaArcade` (infraestructura/entrada): pista dibujada con `paintComponent`, control por teclado (←/→ y A/D para moverse, Enter/R para reiniciar), `javax.swing.Timer` como bucle de juego, selector de escudería (colorea el coche con `TemaF1.colorDeEscuderia`), marcadores de puntos/récord y fin de partida con diálogo.
+  - `VentanaPrincipal`: nueva tarjeta "Juego Arcade" (acento cian) que abre `VentanaArcade`.
 
-**Pendiente / próximo paso sugerido (Sesión B):**
-- Edición real en los CRUD (seleccionar fila → cargar formulario → actualizar) + métodos `actualizar(...)` en los puertos.
-- Validaciones de negocio: piloto único por vehículo, sin duplicados de nombre/escudería.
-- Confirmación al eliminar y búsqueda incremental en las tablas.
+**Pendiente / próximo paso sugerido (Sesión siguiente):**
+- Posibles mejoras: más carriles/dificultad por tiempo real, sonido, pausa (P), o persistir también la escudería elegida.
+- Retomar los pendientes previos: edición real en los CRUD (seleccionar fila → actualizar), validaciones de negocio (piloto único por vehículo, sin duplicados), confirmación al eliminar y búsqueda incremental.
 
 ---
 
@@ -165,7 +161,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
    export PATH="$JAVA_HOME/bin:$PATH"
    MVN=/usr/share/idea/plugins/maven/lib/maven3/bin/mvn
    ```
-2. **Verificar que todo compila y pasa** (29 tests):
+2. **Verificar que todo compila y pasa** (37 tests):
    ```bash
    cd /home/Papi_Leo/VSCODE/JAVA/proyecto_f1 && $MVN test
    ```
