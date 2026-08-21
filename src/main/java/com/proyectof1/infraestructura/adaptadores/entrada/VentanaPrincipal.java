@@ -23,6 +23,7 @@ import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
+import com.proyectof1.infraestructura.adaptadores.salida.RecordJson;
 
 /**
  * Ventana principal del programa (adaptador de entrada en Swing).
@@ -76,6 +77,7 @@ public class VentanaPrincipal extends JFrame {
         JButton btnPilotos = nuevoBotonMenu("Pilotos", "Gestiona tu alineación", ACENTO_PILOTOS);
         JButton btnVehiculos = nuevoBotonMenu("Vehículos", "Configura tus escuderías", ACENTO_VEHICULOS);
         JButton btnSimulacion = nuevoBotonMenu("Simulación", "Vive la carrera en tiempo real", TemaF1.ROJO_F1);
+        JButton btnArcade = nuevoBotonMenu("Juego Arcade", "Conduce y esquiva en modo arcade", new Color(0x00E5FF));
 
         menu.add(btnCircuitos);
         menu.add(Box.createVerticalStrut(14));
@@ -84,6 +86,8 @@ public class VentanaPrincipal extends JFrame {
         menu.add(btnVehiculos);
         menu.add(Box.createVerticalStrut(14));
         menu.add(btnSimulacion);
+        menu.add(Box.createVerticalStrut(14));
+        menu.add(btnArcade);
         add(menu, BorderLayout.CENTER);
 
         // ----- Pie con una nota estilizada. -----
@@ -96,6 +100,7 @@ public class VentanaPrincipal extends JFrame {
         btnPilotos.addActionListener(e -> new VentanaPilotos(pilotoServicio).setVisible(true));
         btnVehiculos.addActionListener(e -> new VentanaVehiculos(vehiculoServicio, pilotoServicio).setVisible(true));
         btnSimulacion.addActionListener(e -> new VentanaSimulacion(circuitoServicio, vehiculoServicio, simulacionService).setVisible(true));
+        btnArcade.addActionListener(e -> new VentanaArcade(vehiculoServicio, new RecordJson()).setVisible(true));
 
     }
 
