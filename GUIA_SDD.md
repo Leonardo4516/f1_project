@@ -96,6 +96,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 19/08/2026  | Sesión A: `ObjectMapper` único reutilizable en `UtilJson` | Completada |
 | 19/08/2026  | Paradas estratégicas: cada auto entra al pit-lane (deja de recorrer metros 28 s), sale con neumáticos nuevos y la UI lo muestra como "En pits" | Completada |
 | 21/08/2026  | Juego arcade jugable: mini-juego de carriles con control por teclado, dificultad progresiva, escudería elegible y récord en JSON | Completada |
+| 21/08/2026  | Fix jugabilidad del arcade: geometría vertical corregida, hitbox real, teclado con bindings, vidas, pausa, dificultad seleccionable y carril libre garantizado | Completada |
 
 ---
 
@@ -120,6 +121,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Media     | Sesión A: deuda técnica (clasificación sin desgaste, `requireNonNull`, limpieza) | Completada | - |
 | Media     | Paradas estratégicas: plan por auto en el ecuador de la carrera + parada de emergencia por neumáticos, con tiempo real en pit-lane | Completada | Carrera en vivo |
 | Alta      | Juego arcade jugable: núcleo `JuegoArcade` testable, `VentanaArcade` con control por teclado, dificultad progresiva, escudería elegible y récord en `data/record.json` | Completada | - |
+| Alta      | Fix jugabilidad del arcade: geometría, hitbox, teclado (bindings), vidas, pausa, dificultad seleccionable y carril libre garantizado | Completada | Juego arcade |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
 
 ---
@@ -130,26 +132,27 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 > esta sección con el estado exacto del proyecto para poder retomarlo en la próxima sesión
 > sin perder el hilo. Se registran: rama actual, trabajo hecho, pendientes y próximos pasos.
 
-### Estado al cierre de la sesión 21/08/2026
+### Estado al cierre de la sesión 21/08/2026 (segunda parte)
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merge de `feature/juego-arcade` sobre el punto de control anterior) |
-| Último commit | `5759fc3` (feat Juego arcade) + merge `--no-ff`; rama limpia |
-| Estado general | Compila con Maven (JDK 21) y 37 tests unitarios en verde |
+| Rama actual | `main` (merge de `fix/juego-arcade-jugabilidad` sobre el punto de control anterior) |
+| Último commit | `faadb51` (fix jugabilidad) + merge `--no-ff`; rama limpia |
+| Estado general | Compila con Maven (JDK 21) y 39 tests unitarios en verde |
 | Ramas locales sin mergear | ninguna nueva; las de sesiones anteriores quedaron como histórico |
 
-**Hecho en esta sesión:**
-- Juego arcade jugable (módulo nuevo, distinto a la simulación pasiva):
-  - `JuegoArcade` (capa de aplicación, sin Swing): 3 carriles, coche del jugador, obstáculos con `Random` inyectable, dificultad progresiva (sube con la puntuación: los obstáculos caen más rápido y aparecen más), puntuación, récord en memoria y detección de colisión (game over).
-  - `JuegoArcadeTest`: 8 pruebas con semilla fija (movimiento con límites, puntuación, aceleración progresiva, choque, reinicio conservando récord, récord nunca baja).
-  - `RecordJson` (infraestructura/salida): persiste el récord en `data/record.json` con el patrón DTO + `UtilJson`; `guardar()` solo actualiza si supera el récord.
-  - `VentanaArcade` (infraestructura/entrada): pista dibujada con `paintComponent`, control por teclado (←/→ y A/D para moverse, Enter/R para reiniciar), `javax.swing.Timer` como bucle de juego, selector de escudería (colorea el coche con `TemaF1.colorDeEscuderia`), marcadores de puntos/récord y fin de partida con diálogo.
-  - `VentanaPrincipal`: nueva tarjeta "Juego Arcade" (acento cian) que abre `VentanaArcade`.
+**Hecho en esta sesión (fix de jugabilidad del arcade):**
+- Se corrigieron los problemas graves que hacían el juego injugable:
+  - **Geometría vertical**: los obstáculos nacían en la parte baja (encima del coche) y subían; ahora nacen arriba y caen hacia el jugador.
+  - **Hitbox real**: la colisión antes se disparaba en la parte alta de la pantalla (lejos del coche); ahora usa la caja real del coche (mismo carril + solape vertical) y se dibuja la línea de meta para entenderla.
+  - **Teclado fiable**: el `KeyListener` no recibía el foco; se sustituyó por `InputMap`/`ActionMap` en `WHEN_IN_FOCUSED_WINDOW` (←/→ y A/D, Espacio iniciar, P pausa).
+  - **Vidas y dificultad justa**: 3 vidas con breve inmunidad tras un golpe (parpadeo), dificultad seleccionable (Fácil/Normal/Difícil), y garantía de que nunca se llenan todos los carriles (siempre hay un carril libre para esquivar).
+  - **UX/UI**: pantalla de inicio con instrucciones, superposición de pausa, marcadores de puntos/vidas/nivel/récord, obstáculos más pequeños y menos frecuentes.
+- `JuegoArcadeTest` ampliado a 10 pruebas (vidas, hitbox, carril libre garantizado, dificultad progresiva).
 
 **Pendiente / próximo paso sugerido (Sesión siguiente):**
-- Posibles mejoras: más carriles/dificultad por tiempo real, sonido, pausa (P), o persistir también la escudería elegida.
-- Retomar los pendientes previos: edición real en los CRUD (seleccionar fila → actualizar), validaciones de negocio (piloto único por vehículo, sin duplicados), confirmación al eliminar y búsqueda incremental.
+- Posibles mejoras del arcade: sonido, perseguir el récord persistido por dificultad, o efectos visuales al chocar.
+- Retomar los pendientes previos: edición real en los CRUD, validaciones de negocio (piloto único por vehículo, sin duplicados), confirmación al eliminar y búsqueda incremental.
 
 ---
 
@@ -161,7 +164,7 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
    export PATH="$JAVA_HOME/bin:$PATH"
    MVN=/usr/share/idea/plugins/maven/lib/maven3/bin/mvn
    ```
-2. **Verificar que todo compila y pasa** (37 tests):
+2. **Verificar que todo compila y pasa** (39 tests):
    ```bash
    cd /home/Papi_Leo/VSCODE/JAVA/proyecto_f1 && $MVN test
    ```
