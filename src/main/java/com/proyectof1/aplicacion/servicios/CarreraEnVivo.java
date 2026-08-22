@@ -235,11 +235,17 @@ public class CarreraEnVivo {
 
         if (paradaEstrategica || auto.getDesgaste() > 85.0) {
 
+            // Seleccionar el neumático óptimo según las vueltas que faltan.
+            int vueltasRestantes = vueltasTotales - auto.getVueltasCompletadas();
+            CompuestoNeumatico nuevoCompuesto = elegirCompuestoOptimo(vueltasRestantes);
+            auto.cambiarCompuesto(nuevoCompuesto);
+
             double duracion = generarDuracionParada();
             auto.iniciarParada(duracion, paradaEstrategica);
             eventos.add("Parada en boxes: " + auto.getVehiculo().getMarcaEscuderia()
                     + " (" + auto.getVehiculo().getPiloto().getNombre()
-                    + ") · " + String.format(Locale.US, "%.1f s", duracion));
+                    + ") · " + String.format(Locale.US, "%.1f s", duracion)
+                    + " · " + nuevoCompuesto.getEtiqueta());
 
         }
 
@@ -274,6 +280,28 @@ public class CarreraEnVivo {
         double duracion = DURACION_BASE_PARADA + azar.nextGaussian() * 2.0;
 
         return Math.max(20.0, Math.min(32.0, duracion));
+
+    }
+
+    /**
+     * Elige el neumático óptimo según las vueltas que faltan por correr.
+     * Más vueltas → compuesto más duro (más duradero); menos vueltas → más rápido.
+     */
+    private CompuestoNeumatico elegirCompuestoOptimo(int vueltasRestantes) {
+
+        if (vueltasRestantes > 15) {
+
+            return CompuestoNeumatico.DURO;
+
+        }
+
+        if (vueltasRestantes > 8) {
+
+            return CompuestoNeumatico.MEDIO;
+
+        }
+
+        return CompuestoNeumatico.BLANDO;
 
     }
 
@@ -399,7 +427,7 @@ public class CarreraEnVivo {
     public static class AutoEnCarrera {
 
         private final Vehiculo vehiculo;
-        private final CompuestoNeumatico compuesto;
+        private CompuestoNeumatico compuesto;
 
         // Metros reales sobre el trazado (acumulado en kilómetros).
         private double distanciaKm;
@@ -434,6 +462,11 @@ public class CarreraEnVivo {
 
         public CompuestoNeumatico getCompuesto() {
             return compuesto;
+        }
+
+        /** Cambia el compuesto de neumáticos montado (para la siguiente vuelta). */
+        void cambiarCompuesto(CompuestoNeumatico nuevo) {
+            this.compuesto = nuevo;
         }
 
         public double getDistanciaKm() {
