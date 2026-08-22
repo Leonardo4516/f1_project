@@ -335,6 +335,7 @@ class CarreraEnVivoTest {
         correrHastaElFinal(carrera);
 
         // Extraer las duraciones de las paradas del registro de eventos.
+        // Formato: "Parada en boxes: … · 26.3 s · Blando (Soft)"
         List<String> eventos = carrera.getEventos();
         List<Double> duraciones = new ArrayList<>();
 
@@ -342,9 +343,9 @@ class CarreraEnVivoTest {
 
             if (evento.startsWith("Parada en boxes:")) {
 
-                // Extraer el valor numérico: "… · 26.3 s"
-                String partes = evento.substring(evento.lastIndexOf("·") + 1).trim();
-                String numeroStr = partes.replace("s", "").trim();
+                // Extraer valor numérico después del primer "·"
+                String despuesDePipes = evento.substring(evento.indexOf("·") + 1).trim();
+                String numeroStr = despuesDePipes.split(" ")[0];
                 duraciones.add(Double.parseDouble(numeroStr));
 
             }
@@ -380,8 +381,8 @@ class CarreraEnVivoTest {
 
             if (evento.startsWith("Parada en boxes:")) {
 
-                String partes = evento.substring(evento.lastIndexOf("·") + 1).trim();
-                String numeroStr = partes.replace("s", "").trim();
+                String despuesDePipes = evento.substring(evento.indexOf("·") + 1).trim();
+                String numeroStr = despuesDePipes.split(" ")[0];
                 double duracion = Double.parseDouble(numeroStr);
 
                 assertTrue(duracion >= 20.0 && duracion <= 45.0,
@@ -389,6 +390,29 @@ class CarreraEnVivoTest {
 
             }
         }
+
+    }
+
+    @Test
+    void compuestoCambiaSegunVueltasRestantes() {
+
+        CarreraEnVivo carrera = carreraDeTres(20);
+        correrHastaElFinal(carrera);
+
+        // Verificar que hubo al menos un cambio de compuesto en los eventos.
+        boolean vioCambio = false;
+
+        for (String evento : carrera.getEventos()) {
+
+            if (evento.contains("Blando") || evento.contains("Medio") || evento.contains("Duro")) {
+
+                vioCambio = true;
+                break;
+
+            }
+        }
+
+        assertTrue(vioCambio, "Debería haber al menos un cambio de compuesto registrado");
 
     }
 
