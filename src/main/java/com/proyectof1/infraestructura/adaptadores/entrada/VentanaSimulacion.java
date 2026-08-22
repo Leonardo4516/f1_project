@@ -105,6 +105,15 @@ public class VentanaSimulacion extends JFrame {
     // Motor de la carrera en curso (null fuera de una carrera).
     private CarreraEnVivo carrera;
 
+    // Control de velocidad y pausa de la carrera.
+    private boolean carreraPausada;
+    private int multiplicadorVelocidad = 1;
+    private Thread hiloCarrera;
+    private JButton btnPausa;
+    private JButton btn1x;
+    private JButton btn2x;
+    private JButton btn4x;
+
     /**
      * Constructor de la ventana. Recibe los servicios y valida que no sean nulos.
      */
@@ -132,6 +141,10 @@ public class VentanaSimulacion extends JFrame {
         barProgreso.setStringPainted(true);
         barProgreso.setString("Configura tu carrera y presiona Iniciar");
         zonaCentral.add(barProgreso, BorderLayout.NORTH);
+
+        // Panel de controles de velocidad y pausa.
+        JPanel panelControles = construirPanelControles();
+        zonaCentral.add(panelControles, BorderLayout.AFTER_LINE_AXIS);
 
         JSplitPane panelCentral = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
                 construirPanelRanking(), construirPanelEventos());
@@ -274,6 +287,62 @@ public class VentanaSimulacion extends JFrame {
         return fila;
     }
 
+    /** Construye el panel de controles de pausa y velocidad. */
+    private JPanel construirPanelControles() {
+
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+
+        btnPausa = new JButton("⏸ Pausa");
+        TemaF1.estilizarBoton(btnPausa);
+        btnPausa.setEnabled(false);
+
+        btn1x = new JButton("1x");
+        btn2x = new JButton("2x");
+        btn4x = new JButton("4x");
+
+        TemaF1.estilizarBoton(btn1x);
+        TemaF1.estilizarBoton(btn2x);
+        TemaF1.estilizarBoton(btn4x);
+
+        btn1x.setEnabled(false);
+        btn2x.setEnabled(false);
+        btn4x.setEnabled(false);
+
+        btnPausa.addActionListener(e -> togglePausa());
+        btn1x.addActionListener(e -> setVelocidad(1));
+        btn2x.addActionListener(e -> setVelocidad(2));
+        btn4x.addActionListener(e -> setVelocidad(4));
+
+        panel.add(TemaF1.etiqueta("Control:"));
+        panel.add(btnPausa);
+        panel.add(Box.createHorizontalStrut(14));
+        panel.add(TemaF1.etiqueta("Velocidad:"));
+        panel.add(btn1x);
+        panel.add(btn2x);
+        panel.add(btn4x);
+
+        return panel;
+    }
+
+    /** Alterna entre pausar y reanudar la carrera. */
+    private void togglePausa() {
+
+        carreraPausada = !carreraPausada;
+        btnPausa.setText(carreraPausada ? "▶ Reanudar" : "⏸ Pausa");
+
+    }
+
+    /** Cambia la velocidad de la carrera (1x, 2x, 4x). */
+    private void setVelocidad(int multiplicador) {
+
+        multiplicadorVelocidad = multiplicador;
+
+        btn1x.setEnabled(multiplicador != 1);
+        btn2x.setEnabled(multiplicador != 2);
+        btn4x.setEnabled(multiplicador != 4);
+
+    }
+
     /** Conecta las acciones de los botones de la ventana. */
     private void conectarAcciones() {
 
@@ -387,9 +456,10 @@ public class VentanaSimulacion extends JFrame {
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
         deshabilitarControles(true);
+        habilitarControlesCarrera(true);
 
         // La simulación corre en otro hilo para no congelar la interfaz.
-        new Thread(() -> {
+        hiloCarrera = new Thread(() -> {
 
             // Solo se imprimen los eventos nuevos: se recuerda cuántos se vieron.
             int[] ultimoEvento = {0};
@@ -398,7 +468,13 @@ public class VentanaSimulacion extends JFrame {
 
                 while (!carrera.estaFinalizada()) {
 
-                    carrera.avanzar(PASO_SIMULADO);
+                    // Si está pausado, no avanza la carrera pero sigue el bucle.
+                    if (!carreraPausada) {
+
+                        double paso = PASO_SIMULADO * multiplicadorVelocidad;
+                        carrera.avanzar(paso);
+
+                    }
 
                     List<String> eventos = carrera.getEventos();
 
@@ -428,6 +504,7 @@ public class VentanaSimulacion extends JFrame {
                     actualizarRanking();
                     mostrarResultado(resultado);
                     deshabilitarControles(false);
+                    habilitarControlesCarrera(false);
 
                 });
 
@@ -591,6 +668,23 @@ public class VentanaSimulacion extends JFrame {
         comboCompuesto.setEnabled(!deshabilitado);
         comboVueltas.setEnabled(!deshabilitado);
 
+    }
+
+    /** Activa o desactiva los controles de pausa y velocidad durante la carrera. */
+    private void habilitarControlesCarrera(boolean habilitado) {
+
+        btnPausa.setEnabled(habilitado);
+        btn1x.setEnabled(habilitado && multiplicadorVelocidad != 1);
+        btn2x.setEnabled(habilitado && multiplicadorVelocidad != 2);
+        btn4x.setEnabled(habilitado && multiplicadorVelocidad != 4);
+
+        if (!habilitado) {
+
+            carreraPausada = false;
+            multiplicadorVelocidad = 1;
+            btnPausa.setText("⏸ Pausa");
+
+        }
     }
 
     /**
