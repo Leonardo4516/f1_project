@@ -152,7 +152,7 @@ public class VentanaSimulacion extends JFrame {
 
         // Panel de controles de velocidad y pausa.
         JPanel panelControles = construirPanelControles();
-        zonaCentral.add(panelControles, BorderLayout.AFTER_LINE_AXIS);
+        zonaCentral.add(panelControles, BorderLayout.SOUTH);
 
         JSplitPane panelCentral = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
                 construirPanelRanking(), construirPanelEventos());
@@ -602,7 +602,8 @@ public class VentanaSimulacion extends JFrame {
 
             }
 
-        }).start();
+        });
+        hiloCarrera.start();
 
     }
 
