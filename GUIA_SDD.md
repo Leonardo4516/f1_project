@@ -97,6 +97,11 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | 19/08/2026  | Paradas estratégicas: cada auto entra al pit-lane (deja de recorrer metros 28 s), sale con neumáticos nuevos y la UI lo muestra como "En pits" | Completada |
 | 21/08/2026  | Juego arcade jugable: mini-juego de carriles con control por teclado, dificultad progresiva, escudería elegible y récord en JSON | Completada |
 | 21/08/2026  | Fix jugabilidad del arcade: geometría vertical corregida, hitbox real, teclado con bindings, vidas, pausa, dificultad seleccionable y carril libre garantizado | Completada |
+| 22/08/2026  | Mejoras arcade: centrado de pista, separación mínima por carril (160 u), filtro de adyacencia (50 u), coche reducido (44×60 px) | Completada |
+| 22/08/2026  | Migración de persistencia JSON a PostgreSQL (JDBC driver 42.7.4) | Completada |
+| 22/08/2026  | Repositorios JDBC: Circuitos, Pilotos, Vehículos y Ranking contra PostgreSQL | Completada |
+| 22/08/2026  | Nuevo modo Clasificación: velocidad=8.0, spawn=1.15, prompt de nombre, top 5 visible | Completada |
+| 22/08/2026  | Modelo de dominio EntradaRanking + interfaz RankingRepositorio + RankingRepositorioJDBC | Completada |
 
 ---
 
@@ -122,6 +127,9 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Media     | Paradas estratégicas: plan por auto en el ecuador de la carrera + parada de emergencia por neumáticos, con tiempo real en pit-lane | Completada | Carrera en vivo |
 | Alta      | Juego arcade jugable: núcleo `JuegoArcade` testable, `VentanaArcade` con control por teclado, dificultad progresiva, escudería elegible y récord en `data/record.json` | Completada | - |
 | Alta      | Fix jugabilidad del arcade: geometría, hitbox, teclado (bindings), vidas, pausa, dificultad seleccionable y carril libre garantizado | Completada | Juego arcade |
+| Alta      | Mejoras arcade: centrado, separación por carril, adyacencia, coche más pequeño | Completada | Fix jugabilidad |
+| Alta      | Migración JSON → PostgreSQL (JDBC, esquema, repositorios) | Completada | - |
+| Alta      | Modo Clasificación: prompt nombre, top 5, panel lateral en UI | Completada | PostgreSQL |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
 
 ---
@@ -132,27 +140,40 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 > esta sección con el estado exacto del proyecto para poder retomarlo en la próxima sesión
 > sin perder el hilo. Se registran: rama actual, trabajo hecho, pendientes y próximos pasos.
 
-### Estado al cierre de la sesión 21/08/2026 (segunda parte)
+### Estado al cierre de la sesión 22/08/2026
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merge de `fix/juego-arcade-jugabilidad` sobre el punto de control anterior) |
-| Último commit | `faadb51` (fix jugabilidad) + merge `--no-ff`; rama limpia |
-| Estado general | Compila con Maven (JDK 21) y 39 tests unitarios en verde |
-| Ramas locales sin mergear | ninguna nueva; las de sesiones anteriores quedaron como histórico |
+| Rama actual | `main` (merge de `feature/postgresql-clasificacion` sobre el punto de control anterior) |
+| Último commit | `8d63fc0` (merge PostgreSQL + clasificación); rama limpia |
+| Estado general | Compila con Maven (JDK 21) y 33 tests unitarios en verde |
+| Ramas locales sin mergear | ninguna nueva |
 
-**Hecho en esta sesión (fix de jugabilidad del arcade):**
-- Se corrigieron los problemas graves que hacían el juego injugable:
-  - **Geometría vertical**: los obstáculos nacían en la parte baja (encima del coche) y subían; ahora nacen arriba y caen hacia el jugador.
-  - **Hitbox real**: la colisión antes se disparaba en la parte alta de la pantalla (lejos del coche); ahora usa la caja real del coche (mismo carril + solape vertical) y se dibuja la línea de meta para entenderla.
-  - **Teclado fiable**: el `KeyListener` no recibía el foco; se sustituyó por `InputMap`/`ActionMap` en `WHEN_IN_FOCUSED_WINDOW` (←/→ y A/D, Espacio iniciar, P pausa).
-  - **Vidas y dificultad justa**: 3 vidas con breve inmunidad tras un golpe (parpadeo), dificultad seleccionable (Fácil/Normal/Difícil), y garantía de que nunca se llenan todos los carriles (siempre hay un carril libre para esquivar).
-  - **UX/UI**: pantalla de inicio con instrucciones, superposición de pausa, marcadores de puntos/vidas/nivel/récord, obstáculos más pequeños y menos frecuentes.
-- `JuegoArcadeTest` ampliado a 10 pruebas (vidas, hitbox, carril libre garantizado, dificultad progresiva).
+**Hecho en esta sesión (22/08/2026):**
+
+*Mejoras del arcade:*
+- Pista centrada en la ventana (wrapper con `FlowLayout.CENTER`).
+- Separación mínima por carril: `SEPARACION_MINIMA_OBSTACULOS = 160` — el obstáculo anterior debe estar a ≥160 u antes de spawnar otro en el mismo carril.
+- Filtro de adyacencia: `MARGEN_ADYACENCIA = 50` — evita que obstáculos en carriles vecinos formen un muro horizontal imposible de esquivar.
+- Coche reducido de 54×70 a 44×60 píxeles para más margen visual.
+- Test `noHayObstaculosAdyacentesDemasiadoCercos` y `laSeparacionMinimaPorCarrilSeCumple`.
+
+*Migración a PostgreSQL:*
+- Dependencia `postgresql:42.7.4` en `pom.xml`.
+- `ConexionJDBC`: gestor de conexión que lee variables de entorno (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`) y crea las tablas al iniciar.
+- Repositorios JDBC: `CircuitosRepositorioJDBC`, `PilotosRepositorioJDBC`, `VehiculosRepositorioJDBC` — CRUD completo con `PreparedStatement` y `ON CONFLICT`.
+- Eliminados: `CircuitosRepositorioJson`, `PilotosRepositorioJson`, `VehiculosRepositorioJson`, `RecordJson`, `UtilJson` y sus tests.
+
+*Modo Clasificación:*
+- Nuevo valor `CLASIFICACION("Clasificación", 8.0, 1.15)` en `JuegoArcade.Dificultad`.
+- `RankingRepositorio` (interfaz) + `RankingRepositorioJDBC` — guardar puntuación, top 5 global, top 5 por dificultad.
+- `EntradaRanking` (record de dominio: jugador, puntuación, dificultad, fecha).
+- `VentanaArcade`: al seleccionar Clasificación se pide nombre (`JOptionPane.showInputDialog`), aparece panel lateral con top 5 (`JTable`), y al finalizar se guarda en la DB.
 
 **Pendiente / próximo paso sugerido (Sesión siguiente):**
-- Posibles mejoras del arcade: sonido, perseguir el récord persistido por dificultad, o efectos visuales al chocar.
-- Retomar los pendientes previos: edición real en los CRUD, validaciones de negocio (piloto único por vehículo, sin duplicados), confirmación al eliminar y búsqueda incremental.
+- Tests JDBC (requieren DB de prueba o mock).
+- Retomar los pendientes previos: edición real en los CRUD, validaciones de negocio, confirmación al eliminar y búsqueda incremental.
+- Posibles mejoras: sonido, efectos visuales al chocar, récord persistido por dificultad.
 
 ---
 
@@ -162,13 +183,18 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
    export PATH="$JAVA_HOME/bin:$PATH"
-   MVN=/usr/share/idea/plugins/maven/lib/maven3/bin/mvn
+   MVN=/usr/share/idea/plugins/maven-plugin/lib/maven3/bin/mvn
    ```
-2. **Verificar que todo compila y pasa** (39 tests):
+2. **Verificar PostgreSQL** (debe estar corriendo):
+   ```bash
+   systemctl status postgresql
+   # Si no está corriendo:
+   sudo systemctl start postgresql
+   ```
+3. **Verificar que todo compila y pasa** (33 tests):
    ```bash
    cd /home/Papi_Leo/VSCODE/JAVA/proyecto_f1 && $MVN test
    ```
-3. **Correr la app:** ejecutar `Main` (`com.proyectof1.Main`) desde el IDE; la persistencia vive en `data/*.json`.
-4. **Convención git del repo:** cada tarea en su propia rama (`fix/…`, `refactor/…`, `test/…`, `feature/…`), un commit en estilo conventional con emoji, `$MVN test` en verde antes de mergear, y merge a `main` con `--no-ff`.
-5. **Antes de tocar código:** `git switch main && git status` para confirmar rama limpia en `main`.
+4. **Correr la app:** ejecutar `Main` (`com.proyectof1.Main`) desde el IDE; la persistencia vive en PostgreSQL (`proyecto_f1`).
+5. **Convención git del repo:** cada tarea en su propia rama (`fix/…`, `refactor/…`, `test/…`, `feature/…`), un commit en estilo conventional con emoji, `$MVN test` en verde antes de mergear, y merge a `main` con `--no-ff`.
 6. **Al cerrar cada sesión:** actualizar este SDD (historial → inventario de tareas → checkpoint con rama, último commit y siguientes pasos).
