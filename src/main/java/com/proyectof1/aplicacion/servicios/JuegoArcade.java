@@ -47,7 +47,8 @@ public class JuegoArcade {
     public enum Dificultad {
         FACIL("Fácil", 5.0, 0.6),
         NORMAL("Normal", 7.0, 1.0),
-        DIFICIL("Difícil", 9.0, 1.35);
+        DIFICIL("Difícil", 9.0, 1.35),
+        CLASIFICACION("Clasificación", 8.0, 1.15);
 
         private final String etiqueta;
         private final double velocidadBase;
@@ -79,6 +80,16 @@ public class JuegoArcade {
 
     // Franja (en unidades) donde un obstáculo se considera "recién aparecido".
     private static final double FRANJA_APARICION = 90.0;
+
+    // Distancia vertical mínima entre obstáculos en el mismo carril.
+    // Se mide desde la parte superior del nuevo (que nace entre -80 y 0)
+    // hasta la parte superior del anterior. Con un valor de 160, el peor
+    // caso (nuevo en y=0) da una brecha de 160−46=114 unidades.
+    private static final double SEPARACION_MINIMA_OBSTACULOS = 160.0;
+
+    // Margen vertical para evitar que obstáculos en carriles adyacentes
+    // aparezcan demasiado cerca entre sí y formen un muro imposible de esquivar.
+    private static final double MARGEN_ADYACENCIA = 50.0;
 
     // Ticks de inmunidad tras perder una vida (evita perder varias seguidas).
     private static final int TICKS_INMUNIDAD = 8;
@@ -198,15 +209,37 @@ public class JuegoArcade {
             return;
         }
 
-        int probabilidad = (int) Math.min(45, 18 + nivelDeDificultad() * 4 * dificultad.multiplicadorSpawn());
+        int probabilidad = (int) Math.min(45, 15 + nivelDeDificultad() * 4 * dificultad.multiplicadorSpawn());
 
         if (aleatorio.nextInt(100) < probabilidad) {
 
-            int carril = elegirCarrilLibre();
-            // Desfase vertical aleatorio para que los obstáculos no se alineen en muro.
-            double y = -aleatorio.nextDouble() * 40.0;
-            obstaculos.add(new Obstaculo(carril, y));
+            // Se recopilan los carriles que cumplen ambas condiciones:
+            // sin obstáculo propio demasiado cerca y sin adyacente conflictivo.
+            List<Integer> carrilesSeguros = new ArrayList<>();
 
+            for (int i = 0; i < CANTIDAD_CARRILES; i++) {
+
+                boolean ocupado = false;
+                for (Obstaculo o : obstaculos) {
+                    if (o.carril == i && o.y < FRANJA_APARICION) {
+                        ocupado = true;
+                        break;
+                    }
+                }
+
+                if (!ocupado && !existeObstaculoCercano(i)
+                        && !hayAdyacenteDemasiadoCercano(i)) {
+                    carrilesSeguros.add(i);
+                }
+            }
+
+            if (carrilesSeguros.isEmpty()) {
+                return;
+            }
+
+            int carril = carrilesSeguros.get(aleatorio.nextInt(carrilesSeguros.size()));
+            double y = -aleatorio.nextDouble() * 80.0;
+            obstaculos.add(new Obstaculo(carril, y));
         }
     }
 
@@ -251,6 +284,50 @@ public class JuegoArcade {
         }
 
         return libres.get(aleatorio.nextInt(libres.size()));
+    }
+
+    /**
+     * Comprueba si en el carril dado hay algún obstáculo cuya parte superior
+     * todavía no descendió lo suficiente (está por encima del umbral de
+     * separación). Si es así, no se debe generar otro hasta que baje más.
+     */
+    private boolean existeObstaculoCercano(int carril) {
+
+        for (Obstaculo obstaculo : obstaculos) {
+            if (obstaculo.carril == carril
+                    && obstaculo.y < SEPARACION_MINIMA_OBSTACULOS) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Comprueba si en los carriles adyacentes (izq y der) hay algún obstáculo
+     * que esté demasiado cerca de la zona de aparición (y entre -80 y 0).
+     * Si es así, el nuevo obstáculo formaría un muro horizontal imposible
+     * de esquivar.
+     */
+    private boolean hayAdyacenteDemasiadoCercano(int carril) {
+
+        double yMinNuevo = -80.0;
+        double yMaxNuevo = ALTO_OBSTACULO;
+
+        for (Obstaculo obstaculo : obstaculos) {
+
+            if (obstaculo.carril == carril - 1 || obstaculo.carril == carril + 1) {
+
+                double parteInferior = obstaculo.y + ALTO_OBSTACULO;
+
+                if (parteInferior > yMinNuevo - MARGEN_ADYACENCIA
+                        && obstaculo.y < yMaxNuevo + MARGEN_ADYACENCIA) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** Comprueba si el coche choca con algún obstáculo y aplica el golpe. */

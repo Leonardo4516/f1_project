@@ -21,6 +21,13 @@
             <version>2.18.2</version>
         </dependency>
 
+        <!-- Driver JDBC para PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
+        </dependency>
+
         <!-- Librería para el tema oscuro moderno estilo Formula 1 -->
         <dependency>
             <groupId>com.formdev</groupId>
