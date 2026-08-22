@@ -9,6 +9,7 @@ import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -114,6 +115,13 @@ public class VentanaSimulacion extends JFrame {
     private JButton btn2x;
     private JButton btn4x;
 
+    // Etiquetas de telemetría del auto seleccionado.
+    private JLabel lblTelemetriaVelocidad;
+    private JLabel lblTelemetriaDesgaste;
+    private JLabel lblTelemetriaCompuesto;
+    private JLabel lblTelemetriaParadas;
+    private JLabel lblTelemetriaUltimaVuelta;
+
     /**
      * Constructor de la ventana. Recibe los servicios y valida que no sean nulos.
      */
@@ -179,7 +187,7 @@ public class VentanaSimulacion extends JFrame {
 
     }
 
-    /** Construye el panel superior del centro: tabla de clasificación en vivo. */
+    /** Construye el panel superior del centro: tabla de clasificación en vivo + telemetría. */
     private JPanel construirPanelRanking() {
 
         JPanel panel = new JPanel(new BorderLayout());
@@ -207,7 +215,86 @@ public class VentanaSimulacion extends JFrame {
         panel.add(TemaF1.subtitulo("Clasificación en vivo"), BorderLayout.NORTH);
         panel.add(new JScrollPane(tablaRanking), BorderLayout.CENTER);
 
+        // Telemetría del auto seleccionado.
+        panel.add(construirPanelTelemetria(), BorderLayout.SOUTH);
+
         return panel;
+    }
+
+    /** Construye el panel de telemetría que muestra datos del auto seleccionado. */
+    private JPanel construirPanelTelemetria() {
+
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        panel.setBorder(TemaF1.margenes(4, 8, 4, 4));
+        panel.setBackground(TemaF1.PANEL);
+
+        lblTelemetriaVelocidad = TemaF1.etiqueta("Vel: -- km/h");
+        lblTelemetriaDesgaste = TemaF1.etiqueta("Desgaste: -- %");
+        lblTelemetriaCompuesto = TemaF1.etiqueta("Compuesto: --");
+        lblTelemetriaParadas = TemaF1.etiqueta("Paradas: --");
+        lblTelemetriaUltimaVuelta = TemaF1.etiqueta("Última vuelta: --");
+
+        panel.add(lblTelemetriaVelocidad);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(lblTelemetriaDesgaste);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(lblTelemetriaCompuesto);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(lblTelemetriaParadas);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(lblTelemetriaUltimaVuelta);
+
+        tablaRanking.getSelectionModel().addListSelectionListener(e -> {
+
+            if (!e.getValueIsAdjusting()) {
+
+                actualizarTelemetria();
+
+            }
+        });
+
+        return panel;
+    }
+
+    /** Actualiza la telemetría con el auto seleccionado en la tabla. */
+    private void actualizarTelemetria() {
+
+        if (carrera == null) {
+
+            return;
+
+        }
+
+        int filaSeleccionada = tablaRanking.getSelectedRow();
+
+        if (filaSeleccionada < 0) {
+
+            lblTelemetriaVelocidad.setText("Vel: -- km/h");
+            lblTelemetriaDesgaste.setText("Desgaste: -- %");
+            lblTelemetriaCompuesto.setText("Compuesto: --");
+            lblTelemetriaParadas.setText("Paradas: --");
+            lblTelemetriaUltimaVuelta.setText("Última vuelta: --");
+            return;
+
+        }
+
+        List<AutoEnCarrera> ranking = carrera.ranking();
+
+        if (filaSeleccionada < ranking.size()) {
+
+            AutoEnCarrera auto = ranking.get(filaSeleccionada);
+
+            lblTelemetriaVelocidad.setText(String.format("Vel: %.0f km/h", auto.getVelocidadActual()));
+            lblTelemetriaDesgaste.setText(String.format("Desgaste: %.1f %%", auto.getDesgaste()));
+            lblTelemetriaCompuesto.setText("Compuesto: " + auto.getCompuesto().getEtiqueta());
+            lblTelemetriaParadas.setText("Paradas: " + auto.getParadas());
+
+            String ultimaVuelta = auto.getHoraUltimaVuelta() > 0
+                    ? String.format(Locale.US, "%.2f s", auto.getHoraUltimaVuelta())
+                    : "--";
+            lblTelemetriaUltimaVuelta.setText("Última vuelta: " + ultimaVuelta);
+
+        }
     }
 
     /** Construye el panel inferior del centro: registro de eventos de la carrera. */
@@ -563,6 +650,8 @@ public class VentanaSimulacion extends JFrame {
             barProgreso.setString("Vuelta " + carrera.vueltaDelLider() + " de " + carrera.getVueltasTotales());
 
         }
+
+        actualizarTelemetria();
     }
 
     /** Vuelca el resultado final de la carrera en los eventos y lo muestra en un diálogo. */
