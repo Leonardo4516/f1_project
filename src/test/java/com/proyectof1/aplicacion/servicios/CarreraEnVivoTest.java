@@ -308,6 +308,27 @@ class CarreraEnVivoTest {
     }
 
     @Test
+    void autosIdenticosTienenDistintasMejoresVueltas() {
+
+        // Dos autos idénticos (misma velocidad, mismo piloto).
+        Vehiculo v1 = new Vehiculo("Red Bull", 340, 0.0, new Piloto("Max", 90, 80));
+        Vehiculo v2 = new Vehiculo("Red Bull", 340, 0.0, new Piloto("Max", 90, 80));
+
+        List<Vehiculo> parrilla = new ArrayList<>(Arrays.asList(v1, v2));
+        CarreraEnVivo carrera = new CarreraEnVivo(parrilla, circuito(), "Seco", null, 20);
+        correrHastaElFinal(carrera);
+
+        // Sin varianza, dos autos idénticos tendrían exactamente la misma mejor vuelta.
+        // Con varianza sus mejores vueltas difieren.
+        AutoEnCarrera a1 = carrera.ranking().get(0);
+        AutoEnCarrera a2 = carrera.ranking().get(1);
+
+        assertTrue(Math.abs(a1.getMejorVuelta() - a2.getMejorVuelta()) > 0.01,
+                "La varianza debería producir mejores vueltas distintas en autos idénticos");
+
+    }
+
+    @Test
     void salirDePitsReiniciaElDesgaste() {
 
         CarreraEnVivo carrera = carreraDeTres(15);
