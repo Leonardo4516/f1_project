@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -36,8 +37,9 @@ public class CarreraEnVivo {
     public static final String DNF = "DNF";
     public static final String FINALIZADO = "Finalizado";
 
-    // Duración de una parada en boxes (incluye el paso por el pit-lane) en segundos.
-    private static final double DURACION_PARADA = 28.0;
+    // Duración base de una parada en boxes (incluye el paso por el pit-lane) en segundos.
+    // La parada real se genera con varianza usando el método generarDuracionParada().
+    private static final double DURACION_BASE_PARADA = 25.0;
 
     // Velocidad de seguridad del pit-lane (km/h) mientras el auto está parado.
     private static final double VELOCIDAD_CARRIL_PITS = 80.0;
@@ -220,7 +222,7 @@ public class CarreraEnVivo {
             autorMejorVuelta = auto.getVehiculo();
 
             eventos.add("Vuelta rápida:  *" + auto.getVehiculo().getPiloto().getNombre()
-                    + "*  (" + String.format("%.2f s)", tiempoVuelta));
+                    + "*  (" + String.format(Locale.US, "%.2f s)", tiempoVuelta));
 
         }
 
@@ -228,15 +230,16 @@ public class CarreraEnVivo {
         auto.aplicarDesgaste(auto.getCompuesto().getDesgastePorVuelta());
 
         // Entrada a boxes por estrategia planificada o por neumático destrozado.
-        // La parada es un proceso real: el auto deja de recorrer metros unos
-        // segundos y sale con neumáticos nuevos.
+        // La parada tiene una duración variable que simula la velocidad del equipo.
         boolean paradaEstrategica = auto.debePararAhora();
 
         if (paradaEstrategica || auto.getDesgaste() > 85.0) {
 
-            auto.iniciarParada(DURACION_PARADA, paradaEstrategica);
+            double duracion = generarDuracionParada();
+            auto.iniciarParada(duracion, paradaEstrategica);
             eventos.add("Parada en boxes: " + auto.getVehiculo().getMarcaEscuderia()
-                    + " (" + auto.getVehiculo().getPiloto().getNombre() + ")");
+                    + " (" + auto.getVehiculo().getPiloto().getNombre()
+                    + ") · " + String.format(Locale.US, "%.1f s", duracion));
 
         }
 
@@ -251,6 +254,27 @@ public class CarreraEnVivo {
                     + " (" + auto.getVehiculo().getPiloto().getNombre() + ")");
 
         }
+    }
+
+    /**
+     * Genera una duración aleatoria para la parada en boxes.
+     * Distribución normal (μ=25s, σ=2s) con un 5% de probabilidad de error
+     * humano que genera una parada lenta (35-45s).
+     */
+    private double generarDuracionParada() {
+
+        // 5% de probabilidad de error (parada lenta).
+        if (azar.nextDouble() < 0.05) {
+
+            return 35.0 + azar.nextDouble() * 10.0;
+
+        }
+
+        // Distribución normal: media 25s, desviación estándar 2s.
+        double duracion = DURACION_BASE_PARADA + azar.nextGaussian() * 2.0;
+
+        return Math.max(20.0, Math.min(32.0, duracion));
+
     }
 
     /**

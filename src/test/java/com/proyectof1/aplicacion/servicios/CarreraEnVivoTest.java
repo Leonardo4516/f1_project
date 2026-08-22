@@ -329,6 +329,70 @@ class CarreraEnVivoTest {
     }
 
     @Test
+    void paradasEnBoxesTienenDuracionesVariables() {
+
+        CarreraEnVivo carrera = carreraDeTres(20);
+        correrHastaElFinal(carrera);
+
+        // Extraer las duraciones de las paradas del registro de eventos.
+        List<String> eventos = carrera.getEventos();
+        List<Double> duraciones = new ArrayList<>();
+
+        for (String evento : eventos) {
+
+            if (evento.startsWith("Parada en boxes:")) {
+
+                // Extraer el valor numérico: "… · 26.3 s"
+                String partes = evento.substring(evento.lastIndexOf("·") + 1).trim();
+                String numeroStr = partes.replace("s", "").trim();
+                duraciones.add(Double.parseDouble(numeroStr));
+
+            }
+        }
+
+        assertTrue(duraciones.size() >= 2,
+                "Debe haber al menos dos paradas para comparar duraciones");
+
+        // Verificar que no todas las duraciones son idénticas.
+        boolean hayDiferencia = false;
+        for (int i = 1; i < duraciones.size(); i++) {
+
+            if (Math.abs(duraciones.get(i) - duraciones.get(i - 1)) > 0.01) {
+
+                hayDiferencia = true;
+                break;
+
+            }
+        }
+
+        assertTrue(hayDiferencia,
+                "Las duraciones de parada deberían variar entre sí");
+
+    }
+
+    @Test
+    void duracionParadaDentroDeRangoRazonable() {
+
+        CarreraEnVivo carrera = carreraDeTres(15);
+        correrHastaElFinal(carrera);
+
+        for (String evento : carrera.getEventos()) {
+
+            if (evento.startsWith("Parada en boxes:")) {
+
+                String partes = evento.substring(evento.lastIndexOf("·") + 1).trim();
+                String numeroStr = partes.replace("s", "").trim();
+                double duracion = Double.parseDouble(numeroStr);
+
+                assertTrue(duracion >= 20.0 && duracion <= 45.0,
+                        "Duración fuera de rango: " + duracion);
+
+            }
+        }
+
+    }
+
+    @Test
     void salirDePitsReiniciaElDesgaste() {
 
         CarreraEnVivo carrera = carreraDeTres(15);
