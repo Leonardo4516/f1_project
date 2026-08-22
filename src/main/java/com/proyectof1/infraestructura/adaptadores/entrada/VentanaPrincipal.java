@@ -98,12 +98,37 @@ public class VentanaPrincipal extends JFrame {
         pie.add(TemaF1.etiqueta("Proyecto F1 · Arquitectura hexagonal"));
         add(pie, BorderLayout.SOUTH);
 
-        // Cada botón abre su ventana correspondiente.
-        btnCircuitos.addActionListener(e -> new VentanaCircuitos(circuitoServicio).setVisible(true));
-        btnPilotos.addActionListener(e -> new VentanaPilotos(pilotoServicio).setVisible(true));
-        btnVehiculos.addActionListener(e -> new VentanaVehiculos(vehiculoServicio, pilotoServicio).setVisible(true));
-        btnSimulacion.addActionListener(e -> new VentanaSimulacion(circuitoServicio, vehiculoServicio, simulacionService).setVisible(true));
-        btnArcade.addActionListener(e -> new VentanaArcade(vehiculoServicio, rankingRepositorio).setVisible(true));
+        // Cada botón abre su ventana encima del menú principal.
+        btnCircuitos.addActionListener(e -> {
+            VentanaCircuitos v = new VentanaCircuitos(circuitoServicio);
+            v.setLocationRelativeTo(this);
+            v.setVisible(true);
+            v.toFront();
+        });
+        btnPilotos.addActionListener(e -> {
+            VentanaPilotos v = new VentanaPilotos(pilotoServicio);
+            v.setLocationRelativeTo(this);
+            v.setVisible(true);
+            v.toFront();
+        });
+        btnVehiculos.addActionListener(e -> {
+            VentanaVehiculos v = new VentanaVehiculos(vehiculoServicio, pilotoServicio);
+            v.setLocationRelativeTo(this);
+            v.setVisible(true);
+            v.toFront();
+        });
+        btnSimulacion.addActionListener(e -> {
+            VentanaSimulacion v = new VentanaSimulacion(circuitoServicio, vehiculoServicio, simulacionService);
+            v.setLocationRelativeTo(this);
+            v.setVisible(true);
+            v.toFront();
+        });
+        btnArcade.addActionListener(e -> {
+            VentanaArcade v = new VentanaArcade(vehiculoServicio, rankingRepositorio);
+            v.setLocationRelativeTo(this);
+            v.setVisible(true);
+            v.toFront();
+        });
 
     }
 

@@ -118,7 +118,6 @@ public class VentanaSimulacion extends JFrame {
         setTitle("Simulador de Fórmula 1");
         setSize(880, 640);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         // ----- Cabecera con el título. -----

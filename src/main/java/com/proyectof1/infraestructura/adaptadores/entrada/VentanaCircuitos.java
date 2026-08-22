@@ -57,7 +57,6 @@ public class VentanaCircuitos extends JFrame {
         setTitle("Administración de Circuitos");
         setSize(580, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         // ----- Cabecera: título y botón de eliminar. -----

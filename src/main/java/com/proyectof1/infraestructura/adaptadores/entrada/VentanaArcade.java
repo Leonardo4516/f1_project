@@ -107,7 +107,6 @@ public class VentanaArcade extends JFrame {
         setSize(900, 760);
         setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         // Cabecera.
