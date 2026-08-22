@@ -131,6 +131,12 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 | Alta      | Migración JSON → PostgreSQL (JDBC, esquema, repositorios) | Completada | - |
 | Alta      | Modo Clasificación: prompt nombre, top 5, panel lateral en UI | Completada | PostgreSQL |
 | Alta      | Mantener la sección de Punto de Control actualizada al cerrar cada sesión | Completada | - |
+| Alta      | Varianza en vueltas (±0.3s) para inconsistencia humana | Completada | Carrera en vivo |
+| Alta      | Paradas en boxes con duración variable (normal μ=25σ=2 + 5% error) | Completada | Varianza |
+| Alta      | Cambio de neumático en pits según vueltas restantes (>15=Duro, >8=Medio, sino=Blando) | Completada | Paradas |
+| Alta      | Safety Car: 40% probabilidad tras DNF, reduce velocidad 80 km/h, 3-5 vueltas | Completada | Carrera en vivo |
+| Media     | Control de velocidad (1x/2x/4x) y pausa/reanudar en UI de simulación | Completada | UI simulación |
+| Media     | Telemetría por auto: velocidad, desgaste, compuesto, paradas y última vuelta | Completada | UI simulación |
 
 ---
 
@@ -144,36 +150,51 @@ Esta guía sigue el marco de trabajo DSD para desarrollo individual, organizando
 
 | Campo | Valor |
 |-------|-------|
-| Rama actual | `main` (merge de `feature/postgresql-clasificacion` sobre el punto de control anterior) |
-| Último commit | `8d63fc0` (merge PostgreSQL + clasificación); rama limpia |
-| Estado general | Compila con Maven (JDK 21) y 33 tests unitarios en verde |
+| Rama actual | `main` (merge de 6 ramas feature/sim-* sobre el punto de control anterior) |
+| Último commit | `ff9976b` (merge telemetría); rama limpia |
+| Estado general | Compila con Maven (JDK 21) y 39 tests unitarios en verde |
 | Ramas locales sin mergear | ninguna nueva |
 
-**Hecho en esta sesión (22/08/2026):**
+**Hecho en esta sesión (22/08/2026) — Mejoras a la simulación:**
 
-*Mejoras del arcade:*
-- Pista centrada en la ventana (wrapper con `FlowLayout.CENTER`).
-- Separación mínima por carril: `SEPARACION_MINIMA_OBSTACULOS = 160` — el obstáculo anterior debe estar a ≥160 u antes de spawnar otro en el mismo carril.
-- Filtro de adyacencia: `MARGEN_ADYACENCIA = 50` — evita que obstáculos en carriles vecinos formen un muro horizontal imposible de esquivar.
-- Coche reducido de 54×70 a 44×60 píxeles para más margen visual.
-- Test `noHayObstaculosAdyacentesDemasiadoCercos` y `laSeparacionMinimaPorCarrilSeCumple`.
+*1. Varianza en vueltas (feature/sim-varianza):*
+- Añadido `VARIANZA_VUELTA = 0.3` (±0.3 segundos) en `CarreraEnVivo.java`.
+- Cada auto recibe una perturbación aleatoria en su tiempo de vuelta simulando inconsistencia humana.
+- Test: `autosIdenticosTienenDistintasMejoresVueltas`.
 
-*Migración a PostgreSQL:*
-- Dependencia `postgresql:42.7.4` en `pom.xml`.
-- `ConexionJDBC`: gestor de conexión que lee variables de entorno (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`) y crea las tablas al iniciar.
-- Repositorios JDBC: `CircuitosRepositorioJDBC`, `PilotosRepositorioJDBC`, `VehiculosRepositorioJDBC` — CRUD completo con `PreparedStatement` y `ON CONFLICT`.
-- Eliminados: `CircuitosRepositorioJson`, `PilotosRepositorioJson`, `VehiculosRepositorioJson`, `RecordJson`, `UtilJson` y sus tests.
+*2. Paradas aleatorias (feature/sim-pits-random):*
+- Duración de parada con distribución normal (μ=25s, σ=2s) + 5% de probabilidad de error (35-45s).
+- Eventos de parada ahora muestran la duración: `· 24.0 s · Medio (Medium)`.
+- Fix: `String.format` con `Locale.US` para evitar separadores regionales.
+- Tests: `paradasEnBoxesTienenDuracionesVariables`, `duracionParadaDentroDeRangoRazonable`.
 
-*Modo Clasificación:*
-- Nuevo valor `CLASIFICACION("Clasificación", 8.0, 1.15)` en `JuegoArcade.Dificultad`.
-- `RankingRepositorio` (interfaz) + `RankingRepositorioJDBC` — guardar puntuación, top 5 global, top 5 por dificultad.
-- `EntradaRanking` (record de dominio: jugador, puntuación, dificultad, fecha).
-- `VentanaArcade`: al seleccionar Clasificación se pide nombre (`JOptionPane.showInputDialog`), aparece panel lateral con top 5 (`JTable`), y al finalizar se guarda en la DB.
+*3. Cambio de neumático en pits (feature/sim-cambio-compuesto):*
+- Campo `compuesto` ahora es mutable en `AutoEnCarrera`.
+- Método `elegirCompuestoOptimo(vueltasRestantes)`: >15=Duro, >8=Medio, ≤8=Blando.
+- Se muestra el compuesto al que cambia en el log de paradas.
+- Test: `compuestoCambiaSegunVueltasRestantes`.
+
+*4. Safety Car (feature/sim-safety-car):*
+- 40% de probabilidad de activar SC tras un DNF (si no hay uno activo).
+- SC dura 3-5 vueltas y limita la velocidad a 80 km/h.
+- El pelotón se agrupa: gaps se reducen significativamente.
+- Eventos: `⚠️ SAFETY CAR desplegado` y `✅ Safety car retirado`.
+- Tests: `safetyCarSeActivaTrasAbandono`, `safetyCarReduceLaVelocidadDelPeloton`.
+
+*5. Control de velocidad y pausa (feature/sim-controles):*
+- Panel de controles debajo de la barra de progreso: ⏸ Pausa/▶ Reanudar + botones 1x/2x/4x.
+- La velocidad multiplicada afecta el paso simulado: `PASO_SIMULADO * multiplicadorVelocidad`.
+- Los controles se habilitan durante la carrera y se desactivan al finalizar.
+
+*6. Telemetría por auto (feature/sim-telemetria):*
+- Panel inferior en la tabla de clasificación que muestra datos del auto seleccionado.
+- Velocidad actual (km/h), desgaste de neumáticos (%), compuesto montado, número de paradas, última vuelta (s).
+- Se actualiza en cada tick de la carrera.
 
 **Pendiente / próximo paso sugerido (Sesión siguiente):**
 - Tests JDBC (requieren DB de prueba o mock).
 - Retomar los pendientes previos: edición real en los CRUD, validaciones de negocio, confirmación al eliminar y búsqueda incremental.
-- Posibles mejoras: sonido, efectos visuales al chocar, récord persistido por dificultad.
+- Posibles mejoras: climas dinámicos (lluvia a mitad de carrera), neumáticos intermedios/de lluvia.
 
 ---
 
