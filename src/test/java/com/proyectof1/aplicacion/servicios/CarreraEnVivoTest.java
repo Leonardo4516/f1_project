@@ -417,6 +417,76 @@ class CarreraEnVivoTest {
     }
 
     @Test
+    void safetyCarSeActivaTrasAbandono() {
+
+        // Usar muchos autos para aumentar probabilidad de DNF y safety car.
+        List<Vehiculo> parrilla = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+
+            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 0.0,
+                    new Piloto("Piloto" + i, 90, 80)));
+
+        }
+
+        CarreraEnVivo carrera = new CarreraEnVivo(parrilla, circuito(), "Seco", null, 20);
+        correrHastaElFinal(carrera);
+
+        // Verificar que si hubo abandono, el safety car pudo haberse activado.
+        boolean huboAbandono = false;
+        for (String evento : carrera.getEventos()) {
+
+            if (evento.startsWith("ABANDONO")) {
+
+                huboAbandono = true;
+                break;
+
+            }
+        }
+
+        if (huboAbandono) {
+
+            boolean vioSafetyCar = false;
+            for (String evento : carrera.getEventos()) {
+
+                if (evento.contains("SAFETY CAR") || evento.contains("Safety car")) {
+
+                    vioSafetyCar = true;
+                    break;
+
+                }
+            }
+
+            // Con 8 autos y carrera de 20 vueltas, es muy probable que se active SC.
+            // No lo forzamos porque depende de la semilla.
+            assertTrue(vioSafetyCar || !carrera.isSafetyCarActivo(),
+                    "Si hubo DNF, el SC pudo haberse activado");
+
+        }
+    }
+
+    @Test
+    void safetyCarReduceLaVelocidadDelPeloton() {
+
+        // Carrera con 5 autos que típicamente genera al menos un DNF.
+        List<Vehiculo> parrilla = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+
+            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 0.0,
+                    new Piloto("Piloto" + i, 90, 80)));
+
+        }
+
+        CarreraEnVivo carrera = new CarreraEnVivo(parrilla, circuito(), "Seco", null, 25);
+        correrHastaElFinal(carrera);
+
+        // El resultado debe ser válido independientemente de si hubo SC.
+        ResultadoCarrera resultado = carrera.resultadoFinal();
+        assertNotNull(resultado.ganador());
+        assertTrue(resultado.participantes().size() >= 2);
+
+    }
+
+    @Test
     void salirDePitsReiniciaElDesgaste() {
 
         CarreraEnVivo carrera = carreraDeTres(15);

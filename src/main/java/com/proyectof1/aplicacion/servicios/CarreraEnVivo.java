@@ -72,6 +72,13 @@ public class CarreraEnVivo {
 
     private boolean finalizada;
 
+    // Safety Car: se activa cuando hay un abandono con cierta probabilidad.
+    private boolean safetyCarActivo;
+    private int vueltasSafetyCarRestantes;
+
+    // Velocidad del safety car (km/h). El pelotón no puede superar esta velocidad.
+    private static final double VELOCIDAD_SAFETY_CAR = 80.0;
+
     /**
      * Crea una carrera nueva.
      *
@@ -186,6 +193,14 @@ public class CarreraEnVivo {
 
             // Velocidad media equivalente en km/h y metros recorridos en el paso.
             double velocidad = kmPorVuelta / (tiempoVuelta / 3600.0);
+
+            // Bajo safety car, todos los autos reducen a la velocidad del SC.
+            if (safetyCarActivo) {
+
+                velocidad = Math.min(velocidad, VELOCIDAD_SAFETY_CAR);
+
+            }
+
             auto.setVelocidadActual(velocidad);
 
             auto.acumularDistancia(velocidad * segundos / 3600.0);
@@ -199,6 +214,18 @@ public class CarreraEnVivo {
         }
 
         tiempoCarrera += segundos;
+
+        // Decrementar el contador de vueltas del safety car.
+        if (safetyCarActivo) {
+
+            vueltasSafetyCarRestantes--;
+
+            if (vueltasSafetyCarRestantes <= 0) {
+
+                desactivarSafetyCar();
+
+            }
+        }
 
         // La carrera termina cuando el líder cruza la bandera a cuadros.
         AutoEnCarrera lider = ranking().get(0);
@@ -259,6 +286,12 @@ public class CarreraEnVivo {
             eventos.add("ABANDONO: " + auto.getVehiculo().getMarcaEscuderia()
                     + " (" + auto.getVehiculo().getPiloto().getNombre() + ")");
 
+            // 40% de probabilidad de safety car tras un abandono (si no hay uno activo).
+            if (!safetyCarActivo && azar.nextDouble() < 0.40) {
+
+                activarSafetyCar();
+
+            }
         }
     }
 
@@ -339,6 +372,27 @@ public class CarreraEnVivo {
 
     }
 
+    /**
+     * Activa el safety car por un número de vueltas aleatorio (3-5).
+     * El pelotón se agrupa y los autos no pueden superar la velocidad del SC.
+     */
+    private void activarSafetyCar() {
+
+        safetyCarActivo = true;
+        vueltasSafetyCarRestantes = 3 + azar.nextInt(3); // 3, 4 o 5 vueltas
+        eventos.add("⚠️ SAFETY CAR desplegado · " + vueltasSafetyCarRestantes + " vueltas");
+
+    }
+
+    /** Desactiva el safety car y reanuda la carrera a ritmo normal. */
+    private void desactivarSafetyCar() {
+
+        safetyCarActivo = false;
+        vueltasSafetyCarRestantes = 0;
+        eventos.add("✅ Safety car retirado · carrera reanudada");
+
+    }
+
     /** Devuelve una copia de los eventos registrados hasta el momento. */
     public List<String> getEventos() {
 
@@ -365,6 +419,10 @@ public class CarreraEnVivo {
 
     public boolean estaFinalizada() {
         return finalizada;
+    }
+
+    public boolean isSafetyCarActivo() {
+        return safetyCarActivo;
     }
 
     public double getTiempoCarrera() {
