@@ -42,6 +42,10 @@ public class CarreraEnVivo {
     // Velocidad de seguridad del pit-lane (km/h) mientras el auto está parado.
     private static final double VELOCIDAD_CARRIL_PITS = 80.0;
 
+    // Varianza máxima (± segundos) aplicada al tiempo de vuelta de cada auto.
+    // Simula la inconsistencia natural de un piloto vuelta a vuelta.
+    private static final double VARIANZA_VUELTA = 0.3;
+
     // Un compuesto por defecto cuando no se especifica uno por vehículo.
     private final SimulacionService simulacion;
     private final Circuito circuito;
@@ -174,6 +178,9 @@ public class CarreraEnVivo {
             // Ritmo actual con el desgaste que lleva el auto en este momento.
             double tiempoVuelta = simulacion.proyectarVuelta(
                     auto.getVehiculo(), circuito, clima, auto.getCompuesto(), auto.getDesgaste());
+
+            // Varianza vuelta a vuelta: ±0.3s simulando inconsistencia humana.
+            tiempoVuelta += (azar.nextDouble() * 2.0 - 1.0) * VARIANZA_VUELTA;
 
             // Velocidad media equivalente en km/h y metros recorridos en el paso.
             double velocidad = kmPorVuelta / (tiempoVuelta / 3600.0);
