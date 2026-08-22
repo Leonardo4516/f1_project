@@ -11,6 +11,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.Objects;
 
 import javax.swing.AbstractAction;
@@ -25,94 +26,85 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
+import javax.swing.table.DefaultTableModel;
 
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
+import com.proyectof1.aplicacion.puertos.salida.RankingRepositorio;
 import com.proyectof1.aplicacion.servicios.JuegoArcade;
 import com.proyectof1.aplicacion.servicios.JuegoArcade.Dificultad;
 import com.proyectof1.aplicacion.servicios.JuegoArcade.Obstaculo;
+import com.proyectof1.dominio.EntradaRanking;
 import com.proyectof1.dominio.Vehiculo;
-import com.proyectof1.infraestructura.adaptadores.salida.RecordJson;
 
 /**
  * Ventana del juego arcade (adaptador de entrada en Swing). Es un mini-juego
  * jugable de conducción entre carriles: el jugador mueve su coche con las
  * flechas izquierda/derecha (o A/D) para esquivar obstáculos que caen desde
  * arriba. Incluye vidas, dificultad seleccionable, pausa, marcadores en
- * pantalla y un récord persistido en JSON.
- *
- * <p>La pista se dibuja con {@code paintComponent} y avanza con un
- * {@link Timer}. El teclado se captura con {@link InputMap}/{@link ActionMap}
- * en modo {@code WHEN_IN_FOCUSED_WINDOW} para que responda aunque el foco esté
- * en un botón o desplegable. Toda la lógica vive en {@link JuegoArcade}.</p>
+ * pantalla, modo clasificación con top 5 y récord persistido en PostgreSQL.
  */
 public class VentanaArcade extends JFrame {
 
-    // Estados posibles de la ventana.
     private enum Estado { INICIO, JUGANDO, PAUSA }
 
-    // Dimensiones del área de juego.
     private static final int ANCHO_CARRIL = 80;
     private static final int ANCHO_PISTA = ANCHO_CARRIL * JuegoArcade.CANTIDAD_CARRILES;
     private static final int ALTO_PISTA = 540;
     private static final int MARGEN_INFERIOR = 30;
 
-    // Tamaños de dibujo en píxeles.
-    private static final int ANCHO_COCHE = 54;
-    private static final int ALTO_COCHE_PX = 70;
+    private static final int ANCHO_COCHE = 44;
+    private static final int ALTO_COCHE_PX = 60;
     private static final int ANCHO_OBSTACULO = 40;
     private static final int ALTO_OBSTACULO_PX = 38;
 
-    // Ritmo del bucle de juego.
     private static final int TICK_MS = 40;
 
-    // Servicios inyectados: escuderías para elegir y récord persistente.
     private final VehiculoServicio vehiculoServicio;
-    private final RecordJson recordJson;
+    private final RankingRepositorio rankingRepositorio;
 
-    // Núcleo del juego.
     private JuegoArcade juego;
-
-    // Estado actual de la ventana.
     private Estado estado;
 
-    // Selectores y botones.
     private JComboBox<Vehiculo> comboVehiculos;
     private JComboBox<Dificultad> comboDificultad;
     private JButton btnIniciar;
     private JButton btnPausa;
 
-    // Panel que dibuja la pista.
     private PanelPista panelPista;
 
-    // Marcadores en pantalla.
     private JLabel etiquetaPuntos;
     private JLabel etiquetaVidas;
     private JLabel etiquetaNivel;
     private JLabel etiquetaRecord;
 
-    // Color del coche según la escudería.
     private Color colorEscudo = TemaF1.ROJO_F1;
-
-    // Temporizador del bucle de juego.
     private Timer timer;
 
+    // Clasificación: nombre del jugador y panel de top 5.
+    private String nombreJugador;
+    private JPanel panelRanking;
+    private DefaultTableModel modeloRanking;
+
     /**
-     * Constructor de la ventana. Recibe el servicio de vehículos (para elegir
-     * escudería) y el adaptador de récord. Valida que no sean nulos.
+     * Constructor de la ventana. Recibe el servicio de vehículos y el repositorio
+     * de ranking. Valida que no sean nulos.
      */
-    public VentanaArcade(VehiculoServicio vehiculoServicio, RecordJson recordJson) {
+    public VentanaArcade(VehiculoServicio vehiculoServicio, RankingRepositorio rankingRepositorio) {
 
         this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio,
                 "El servicio de vehículos no puede ser nulo.");
-        this.recordJson = Objects.requireNonNull(recordJson, "El récord no puede ser nulo.");
+        this.rankingRepositorio = Objects.requireNonNull(rankingRepositorio,
+                "El repositorio de ranking no puede ser nulo.");
 
-        this.juego = new JuegoArcade(recordJson.leer());
+        this.juego = new JuegoArcade(0);
         this.estado = Estado.INICIO;
 
         setTitle("Juego Arcade · Formulemon");
-        setSize(640, 760);
+        setSize(900, 760);
         setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -124,22 +116,28 @@ public class VentanaArcade extends JFrame {
         cabecera.add(TemaF1.titulo("Juego Arcade"), BorderLayout.WEST);
         add(cabecera, BorderLayout.NORTH);
 
-        // Centro: pista + marcadores.
+        // Centro: pista centrada + marcadores + ranking.
         JPanel centro = new JPanel(new BorderLayout());
         panelPista = new PanelPista();
         panelPista.setPreferredSize(new Dimension(ANCHO_PISTA, ALTO_PISTA));
-        centro.add(panelPista, BorderLayout.CENTER);
+
+        JPanel wrapperPista = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapperPista.setBackground(TemaF1.ASFALTO);
+        wrapperPista.add(panelPista);
+        centro.add(wrapperPista, BorderLayout.CENTER);
         centro.add(construirPanelMarcadores(), BorderLayout.SOUTH);
+
+        // Panel de ranking a la derecha (solo visible en modo clasificación).
+        panelRanking = construirPanelRanking();
+        panelRanking.setVisible(false);
+        centro.add(panelRanking, BorderLayout.EAST);
+
         add(centro, BorderLayout.CENTER);
 
         // Sur: configuración y botones.
         add(construirPanelControles(), BorderLayout.SOUTH);
 
-        // El teclado se captura con bindings para que funcione siempre que la
-        // ventana tenga el foco, aunque el usuario haya pulsado un botón o combo.
         configurarAtajosDeTeclado();
-
-        // Mensaje de ayuda inicial.
         panelPista.repaint();
     }
 
@@ -175,6 +173,71 @@ public class VentanaArcade extends JFrame {
         return panel;
     }
 
+    /** Construye el panel del top 5 de clasificación. */
+    private JPanel construirPanelRanking() {
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(TemaF1.margenes(8, 8, 8, 8));
+        panel.setPreferredSize(new Dimension(200, ALTO_PISTA + 40));
+        panel.setBackground(TemaF1.PANEL);
+
+        JLabel titulo = TemaF1.etiqueta("TOP 5");
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 16f));
+        titulo.setForeground(new Color(0xF7C948));
+        titulo.setHorizontalAlignment(JLabel.CENTER);
+        panel.add(titulo, BorderLayout.NORTH);
+
+        String[] columnas = {"#", "Jugador", "Pts"};
+        modeloRanking = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable tabla = new JTable(modeloRanking);
+        tabla.setFont(tabla.getFont().deriveFont(13f));
+        tabla.setRowHeight(26);
+        tabla.setShowGrid(false);
+        tabla.setIntercellSpacing(new Dimension(0, 2));
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(30);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(50);
+        tabla.getTableHeader().setFont(tabla.getFont().deriveFont(Font.BOLD, 12f));
+        tabla.getTableHeader().setBackground(TemaF1.FONDO);
+        tabla.getTableHeader().setForeground(TemaF1.TEXTO_SECUNDARIO);
+        tabla.setBackground(TemaF1.PANEL);
+        tabla.setForeground(TemaF1.TEXTO);
+        tabla.setSelectionBackground(TemaF1.ROJO_F1);
+
+        JScrollPane scroll = new JScrollPane(tabla);
+        scroll.setBorder(null);
+        scroll.getViewport().setBackground(TemaF1.PANEL);
+        panel.add(scroll, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    /** Actualiza la tabla del top 5 desde la base de datos. */
+    private void actualizarTop5() {
+
+        Dificultad diff = (Dificultad) comboDificultad.getSelectedItem();
+        List<EntradaRanking> entradas;
+
+        if (diff == Dificultad.CLASIFICACION) {
+            entradas = rankingRepositorio.top5();
+        } else {
+            entradas = rankingRepositorio.top5PorDificultad(diff.name());
+        }
+
+        modeloRanking.setRowCount(0);
+
+        for (int i = 0; i < entradas.size(); i++) {
+            EntradaRanking e = entradas.get(i);
+            modeloRanking.addRow(new Object[]{i + 1, e.jugador(), e.puntuacion()});
+        }
+    }
+
     /** Construye el panel inferior: escudería, dificultad y botones. */
     private JPanel construirPanelControles() {
 
@@ -182,7 +245,6 @@ public class VentanaArcade extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(TemaF1.margenes(8, 12, 16, 16));
 
-        // Fila de configuración.
         JPanel filaConfig = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
 
         comboVehiculos = new JComboBox<>();
@@ -198,7 +260,6 @@ public class VentanaArcade extends JFrame {
         filaConfig.add(TemaF1.etiqueta("Dificultad:"));
         filaConfig.add(comboDificultad);
 
-        // Fila de acciones.
         JPanel filaBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
 
         btnIniciar = new JButton("Iniciar");
@@ -216,7 +277,6 @@ public class VentanaArcade extends JFrame {
         panel.add(Box.createVerticalStrut(6));
         panel.add(filaBotones);
 
-        // Al cambiar de escudería se actualiza el color del coche (si no se corre).
         comboVehiculos.addActionListener(e -> {
             Vehiculo seleccion = (Vehiculo) comboVehiculos.getSelectedItem();
             if (seleccion != null && estado != Estado.JUGANDO) {
@@ -225,13 +285,20 @@ public class VentanaArcade extends JFrame {
             }
         });
 
+        comboDificultad.addActionListener(e -> {
+            boolean esClasificacion = comboDificultad.getSelectedItem() == Dificultad.CLASIFICACION;
+            panelRanking.setVisible(esClasificacion);
+            actualizarTop5();
+            pack();
+            setLocationRelativeTo(null);
+        });
+
         btnIniciar.addActionListener(e -> iniciarPartida());
         btnPausa.addActionListener(e -> alternarPausa());
 
         return panel;
     }
 
-    /** Registra los atajos de teclado con WHEN_IN_FOCUSED_WINDOW. */
     private void configurarAtajosDeTeclado() {
 
         InputMap im = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -260,22 +327,32 @@ public class VentanaArcade extends JFrame {
 
         am.put("iniciar", new AccionTecla(this::iniciarPartida));
         am.put("pausa", new AccionTecla(this::alternarPausa));
-
     }
 
     /** Inicia una partida nueva (o la reinicia si ya se estaba jugando). */
     private void iniciarPartida() {
 
         if (estado == Estado.JUGANDO && !juego.isGameOver()) {
-            // Ya está corriendo; la barra espaciadora no la reinicia por error.
             return;
         }
 
-        // Lee la dificultad elegida y reconstruye el juego con el récord actual.
         Dificultad dificultad = (Dificultad) comboDificultad.getSelectedItem();
         if (dificultad == null) {
             dificultad = Dificultad.NORMAL;
         }
+
+        // En modo clasificación se pide el nombre del jugador.
+        if (dificultad == Dificultad.CLASIFICACION) {
+            nombreJugador = (String) JOptionPane.showInputDialog(this,
+                    "Ingresa tu nombre para la clasificación:",
+                    "Clasificación", JOptionPane.PLAIN_MESSAGE,
+                    null, null, nombreJugador);
+            if (nombreJugador == null || nombreJugador.isBlank()) {
+                return;
+            }
+            nombreJugador = nombreJugador.trim();
+        }
+
         juego = new JuegoArcade(new java.util.Random(), juego.getRecord(), dificultad);
 
         Vehiculo seleccion = (Vehiculo) comboVehiculos.getSelectedItem();
@@ -316,40 +393,31 @@ public class VentanaArcade extends JFrame {
         timer.start();
     }
 
-    /** Pausa o reanuda la partida en curso. */
     private void alternarPausa() {
 
-        // Tras el fin de partida no se puede pausar.
         if (juego.isGameOver()) {
             return;
         }
 
         if (estado == Estado.JUGANDO) {
-
             estado = Estado.PAUSA;
             btnPausa.setText("Reanudar");
             panelPista.repaint();
-
         } else if (estado == Estado.PAUSA) {
-
             estado = Estado.JUGANDO;
             btnPausa.setText("Pausa");
             panelPista.repaint();
-
         }
     }
 
-    /** Refresca los marcadores de puntos, vidas, nivel y récord. */
     private void actualizarMarcadores() {
 
         etiquetaPuntos.setText("Puntos: " + juego.getPuntuacion());
         etiquetaNivel.setText("Nivel: " + (juego.getNivel() + 1));
         etiquetaVidas.setText("Vidas: " + corazones(juego.getVidas()));
         etiquetaRecord.setText("Récord: " + juego.getRecord());
-
     }
 
-    /** Convierte las vidas en una cadena de corazones rellenos/vacíos. */
     private String corazones(int vidas) {
 
         StringBuilder sb = new StringBuilder();
@@ -359,34 +427,29 @@ public class VentanaArcade extends JFrame {
         return sb.toString();
     }
 
-    /** Finaliza la partida, guarda el récord y avisa al jugador. */
+    /** Finaliza la partida, guarda en ranking si es clasificación y avisa. */
     private void terminarPartida() {
 
-        boolean nuevoRecord = recordJson.guardar(juego.getPuntuacion());
+        Dificultad diff = (Dificultad) comboDificultad.getSelectedItem();
 
-        if (nuevoRecord) {
-            JOptionPane.showMessageDialog(this,
-                    "¡Nuevo récord! " + juego.getPuntuacion() + " puntos.",
-                    "Fin de la carrera", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "Chocaste. Puntuación: " + juego.getPuntuacion() + " puntos.",
-                    "Fin de la carrera", JOptionPane.INFORMATION_MESSAGE);
+        // En modo clasificación, guardar la puntuación en el ranking.
+        if (diff == Dificultad.CLASIFICACION && nombreJugador != null) {
+            rankingRepositorio.guardar(nombreJugador, juego.getPuntuacion(), diff.name());
+            actualizarTop5();
         }
+
+        JOptionPane.showMessageDialog(this,
+                "Chocaste. Puntuación: " + juego.getPuntuacion() + " puntos.",
+                "Fin de la carrera", JOptionPane.INFORMATION_MESSAGE);
 
         etiquetaRecord.setText("Récord: " + juego.getRecord());
     }
 
-    /** Convierte una coordenada vertical lógica del modelo en píxel de pantalla. */
     private int aPixelY(double yLogica) {
         double ratio = yLogica / JuegoArcade.LARGO_PISTA;
         return (int) (ratio * (ALTO_PISTA - MARGEN_INFERIOR));
     }
 
-    /**
-     * Panel que dibuja la pista, el coche y los obstáculos, además de las
-     * superposiciones de inicio y pausa.
-     */
     private class PanelPista extends JPanel {
 
         @Override
@@ -397,53 +460,44 @@ public class VentanaArcade extends JFrame {
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Fondo asfaltado.
-            g2.setColor(new Color(0x2A2A2A));
+            g2.setColor(TemaF1.ASFALTO);
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            // Líneas divisorias de carriles.
             g2.setColor(new Color(0xCCCCCC));
             g2.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             for (int i = 1; i < JuegoArcade.CANTIDAD_CARRILES; i++) {
                 g2.drawLine(i * ANCHO_CARRIL, 0, i * ANCHO_CARRIL, getHeight());
             }
 
-            // Línea de meta (dónde está el jugador), para entender la hitbox.
             int yMeta = aPixelY(JuegoArcade.PARTE_SUPERIOR_COCHE);
             g2.setColor(new Color(0xFFFFFF));
             g2.setStroke(new BasicStroke(1f));
             g2.drawLine(0, yMeta, getWidth(), yMeta);
 
-            // Coche del jugador, anclado a la línea de meta.
             int xCoche = juego.getCarrilCoche() * ANCHO_CARRIL + (ANCHO_CARRIL - ANCHO_COCHE) / 2;
             int yCoche = yMeta;
 
-            // Si es inmune (tras un golpe), el coche parpadea para avisar.
             if (!juego.estaInmune() || (juego.getPuntuacion() % 2 == 0)) {
                 g2.setColor(colorEscudo);
                 g2.fillRoundRect(xCoche, yCoche, ANCHO_COCHE, ALTO_COCHE_PX, 14, 14);
             }
 
-            // Obstáculos: rectángulos que caen desde arriba.
             g2.setColor(new Color(0xCC3333));
             for (Obstaculo obstaculo : juego.getObstaculos()) {
-
                 int y = aPixelY(obstaculo.getY());
                 int x = obstaculo.getCarril() * ANCHO_CARRIL + (ANCHO_CARRIL - ANCHO_OBSTACULO) / 2;
                 g2.fillRoundRect(x, y, ANCHO_OBSTACULO, ALTO_OBSTACULO_PX, 6, 6);
-
             }
 
-            // Superposiciones de estado.
             if (estado == Estado.INICIO) {
-                dibujarMensaje(g2, "Formulemon Arcade", "Usa ← → o A/D para moverte", "Pulsa Iniciar o Espacio para jugar");
+                dibujarMensaje(g2, "Formulemon Arcade",
+                        "Usa ← → o A/D para moverte",
+                        "Pulsa Iniciar o Espacio para jugar");
             } else if (estado == Estado.PAUSA) {
                 dibujarMensaje(g2, "Pausa", "Pulsa P o Reanudar para seguir", null);
             }
-
         }
 
-        /** Dibuja un título, un subtítulo y una tercera línea centrados. */
         private void dibujarMensaje(Graphics2D g2, String titulo, String texto, String pie) {
 
             g2.setColor(new Color(0, 0, 0, 150));
@@ -457,15 +511,18 @@ public class VentanaArcade extends JFrame {
             g2.setColor(TemaF1.TEXTO);
             g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16f));
             if (texto != null) {
-                g2.drawString(texto, (getWidth() - g2.getFontMetrics().stringWidth(texto)) / 2, getHeight() / 2 + 20);
+                g2.drawString(texto,
+                        (getWidth() - g2.getFontMetrics().stringWidth(texto)) / 2,
+                        getHeight() / 2 + 20);
             }
             if (pie != null) {
-                g2.drawString(pie, (getWidth() - g2.getFontMetrics().stringWidth(pie)) / 2, getHeight() / 2 + 48);
+                g2.drawString(pie,
+                        (getWidth() - g2.getFontMetrics().stringWidth(pie)) / 2,
+                        getHeight() / 2 + 48);
             }
         }
     }
 
-    /** Acción reutilizable para los atajos de teclado. */
     private class AccionTecla extends AbstractAction {
 
         private final Runnable accion;
@@ -479,5 +536,4 @@ public class VentanaArcade extends JFrame {
             accion.run();
         }
     }
-
 }

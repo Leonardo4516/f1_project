@@ -27,6 +27,7 @@ public final class TemaF1 {
     public static final Color TEXTO = new Color(0xF5F5F5);
     public static final Color TEXTO_SECUNDARIO = new Color(0x9A9A9A);
     public static final Color BORDE = new Color(0x333333);
+    public static final Color ASFALTO = new Color(0x2A2A2A);
 
     // Colores oficiales de las escuderías (hexadecimal real de cada equipo).
     private static final Map<String, Color> COLORES_EQUIPOS = new HashMap<>();

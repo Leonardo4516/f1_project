@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
@@ -190,5 +191,65 @@ class JuegoArcadeTest {
 
         assertTrue(juego.getRecord() >= 10);
 
+    }
+
+    @Test
+    void laSeparacionMinimaPorCarrilSeCumple() {
+
+        JuegoArcade juego = juegoConSemilla(23L);
+
+        for (int paso = 0; paso < 500 && !juego.isGameOver(); paso++) {
+
+            juego.avanzar();
+
+            for (int c = 0; c < JuegoArcade.CANTIDAD_CARRILES; c++) {
+
+                final int carril = c;
+
+                double[] posiciones = juego.getObstaculos().stream()
+                        .filter(o -> o.getCarril() == carril)
+                        .mapToDouble(Obstaculo::getY)
+                        .sorted()
+                        .toArray();
+
+                for (int i = 1; i < posiciones.length; i++) {
+                    double distancia = posiciones[i] - (posiciones[i - 1] + JuegoArcade.ALTO_OBSTACULO);
+                    assertTrue(distancia >= 100.0,
+                            "En carril " + carril + ", obstáculos demasiado cerca: "
+                                    + distancia + " unidades (mínimo 100).");
+                }
+            }
+        }
+    }
+
+    @Test
+    void noHayObstaculosAdyacentesDemasiadoCercos() {
+
+        JuegoArcade juego = juegoConSemilla(31L);
+
+        for (int paso = 0; paso < 500 && !juego.isGameOver(); paso++) {
+
+            juego.avanzar();
+
+            List<Obstaculo> lista = juego.getObstaculos();
+
+            for (int i = 0; i < lista.size(); i++) {
+                for (int j = i + 1; j < lista.size(); j++) {
+
+                    Obstaculo a = lista.get(i);
+                    Obstaculo b = lista.get(j);
+
+                    if (Math.abs(a.getCarril() - b.getCarril()) == 1) {
+
+                        double distanciaVertical = Math.abs(a.getY() - b.getY());
+
+                        assertTrue(distanciaVertical >= 40.0,
+                                "Obstaculos en carriles " + a.getCarril() + " y " + b.getCarril()
+                                        + " demasiado cerca verticalmente: "
+                                        + distanciaVertical + " unidades (minimo 40).");
+                    }
+                }
+            }
+        }
     }
 }

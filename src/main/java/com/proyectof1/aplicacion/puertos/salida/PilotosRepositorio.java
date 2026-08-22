@@ -7,7 +7,7 @@ import com.proyectof1.dominio.Piloto;
 /**
  * Puerto de salida que define cómo se guardan y consultan los pilotos.
  * La capa de aplicación depende de esta interfaz; la persistencia real
- * (archivo JSON) la implementa PilotosRepositorioJson.
+ * la implementa {@code PilotosRepositorioJDBC}.
  */
 public interface PilotosRepositorio {
 

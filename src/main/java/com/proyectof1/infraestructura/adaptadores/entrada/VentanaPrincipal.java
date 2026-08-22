@@ -22,8 +22,8 @@ import javax.swing.border.Border;
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
+import com.proyectof1.aplicacion.puertos.salida.RankingRepositorio;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
-import com.proyectof1.infraestructura.adaptadores.salida.RecordJson;
 
 /**
  * Ventana principal del programa (adaptador de entrada en Swing).
@@ -44,18 +44,21 @@ public class VentanaPrincipal extends JFrame {
     private final PilotoServicio pilotoServicio;
     private final VehiculoServicio vehiculoServicio;
     private final SimulacionService simulacionService;
+    private final RankingRepositorio rankingRepositorio;
 
     /**
      * Constructor de la ventana principal. Recibe los servicios ya construidos.
      * Se valida que ninguno sea nulo.
      */
     public VentanaPrincipal(CircuitoServicio circuitoServicio, PilotoServicio pilotoServicio,
-            VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
+            VehiculoServicio vehiculoServicio, SimulacionService simulacionService,
+            RankingRepositorio rankingRepositorio) {
 
         this.circuitoServicio = Objects.requireNonNull(circuitoServicio, "Los servicios no pueden ser nulos.");
         this.pilotoServicio = Objects.requireNonNull(pilotoServicio, "Los servicios no pueden ser nulos.");
         this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio, "Los servicios no pueden ser nulos.");
         this.simulacionService = Objects.requireNonNull(simulacionService, "Los servicios no pueden ser nulos.");
+        this.rankingRepositorio = Objects.requireNonNull(rankingRepositorio, "El ranking no puede ser nulo.");
 
         // Configuración básica de la ventana (dashboard fijo).
         setTitle("Simulación de Fórmula 1");
@@ -100,7 +103,7 @@ public class VentanaPrincipal extends JFrame {
         btnPilotos.addActionListener(e -> new VentanaPilotos(pilotoServicio).setVisible(true));
         btnVehiculos.addActionListener(e -> new VentanaVehiculos(vehiculoServicio, pilotoServicio).setVisible(true));
         btnSimulacion.addActionListener(e -> new VentanaSimulacion(circuitoServicio, vehiculoServicio, simulacionService).setVisible(true));
-        btnArcade.addActionListener(e -> new VentanaArcade(vehiculoServicio, new RecordJson()).setVisible(true));
+        btnArcade.addActionListener(e -> new VentanaArcade(vehiculoServicio, rankingRepositorio).setVisible(true));
 
     }
 

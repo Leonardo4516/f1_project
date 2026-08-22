@@ -7,7 +7,7 @@ import com.proyectof1.dominio.Vehiculo;
 /**
  * Puerto de salida que define cómo se guardan y consultan los vehículos.
  * La capa de aplicación depende de esta interfaz; la persistencia real
- * (archivo JSON) la implementa VehiculosRepositorioJson.
+ * la implementa {@code VehiculosRepositorioJDBC}.
  */
 public interface VehiculosRepositorio {
 
