@@ -510,7 +510,7 @@ public class CarreraEnVivo {
 
             this.vehiculo = vehiculo;
             this.compuesto = compuesto;
-            this.desgaste = vehiculo.getDesgasteNeumaticos();
+            this.desgaste = 0.0;
 
         }
 
