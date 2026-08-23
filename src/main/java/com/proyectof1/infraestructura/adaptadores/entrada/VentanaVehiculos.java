@@ -49,7 +49,9 @@ public class VentanaVehiculos extends JFrame {
     // Campos de texto del formulario.
     private JTextField txtMarcaEscuderia;
     private JTextField txtVelocidadMaxima;
-    private JTextField txtDesgaste;
+    private JTextField txtAceleracion;
+    private JTextField txtFrenado;
+    private JTextField txtAgarre;
 
     // Desplegable para elegir el piloto asignado.
     private JComboBox<String> comboPilotos;
@@ -90,7 +92,7 @@ public class VentanaVehiculos extends JFrame {
         add(cabecera, BorderLayout.NORTH);
 
         // ----- Centro: tabla con los vehículos. -----
-        modelo = new DefaultTableModel(new String[]{"Escudería", "Vel. máx (km/h)", "Desgaste %", "Piloto"}, 0) {
+        modelo = new DefaultTableModel(new String[]{"Escudería", "Vel. máx (km/h)", "Acel", "Fren", "Agar", "Piloto"}, 0) {
 
             @Override
             public boolean isCellEditable(int fila, int columna) {
@@ -118,7 +120,9 @@ public class VentanaVehiculos extends JFrame {
 
                 String marcaEscuderia = txtMarcaEscuderia.getText();
                 int velocidadMaxima = Integer.parseInt(txtVelocidadMaxima.getText());
-                double desgaste = Double.parseDouble(txtDesgaste.getText());
+                int aceleracion = Integer.parseInt(txtAceleracion.getText());
+                int frenado = Integer.parseInt(txtFrenado.getText());
+                int agarre = Integer.parseInt(txtAgarre.getText());
                 String nombrePiloto = (String) comboPilotos.getSelectedItem();
 
                 if (nombrePiloto == null) {
@@ -130,7 +134,7 @@ public class VentanaVehiculos extends JFrame {
 
                 Piloto piloto = pilotoServicio.buscarPorNombre(nombrePiloto);
 
-                vehiculoServicio.registrar(marcaEscuderia, velocidadMaxima, desgaste, piloto);
+                vehiculoServicio.registrar(marcaEscuderia, velocidadMaxima, aceleracion, frenado, agarre, piloto);
 
                 actualizarTabla();
                 limpiarCampos();
@@ -178,7 +182,9 @@ public class VentanaVehiculos extends JFrame {
                 javax.swing.JOptionPane.showMessageDialog(this,
                         "Vehículo: " + encontrado.getMarcaEscuderia()
                                 + " | Vel: " + encontrado.getVelocidadMaxima()
-                                + " | Desgaste: " + encontrado.getDesgasteNeumaticos() + "%"
+                                + " | Acel: " + encontrado.getAceleracion()
+                                + " | Fren: " + encontrado.getFrenado()
+                                + " | Agarre: " + encontrado.getAgarre()
                                 + " | Piloto: " + encontrado.getPiloto().getNombre());
 
             } else {
@@ -212,32 +218,46 @@ public class VentanaVehiculos extends JFrame {
     /** Construye la fila inferior del sur: formulario para registrar/actualizar. */
     private JPanel construirPanelFormulario() {
 
-        // Usa GridLayout para que todos los pares etiqueta-campo queden alineados.
-        JPanel panel = new JPanel(new GridLayout(1, 8, 8, 0));
-
+        // Fila 1: Escudería y Velocidad máxima
+        JPanel fila1 = new JPanel(new GridLayout(1, 4, 8, 0));
         txtMarcaEscuderia = new JTextField(9);
         txtVelocidadMaxima = new JTextField(5);
-        txtDesgaste = new JTextField(4);
+        fila1.add(TemaF1.etiqueta("Escudería:"));
+        fila1.add(txtMarcaEscuderia);
+        fila1.add(TemaF1.etiqueta("Vel. máx:"));
+        fila1.add(txtVelocidadMaxima);
+
+        // Fila 2: Aceleración, Frenado y Agarre
+        JPanel fila2 = new JPanel(new GridLayout(1, 6, 8, 0));
+        txtAceleracion = new JTextField(4);
+        txtFrenado = new JTextField(4);
+        txtAgarre = new JTextField(4);
+        fila2.add(TemaF1.etiqueta("Acel:"));
+        fila2.add(txtAceleracion);
+        fila2.add(TemaF1.etiqueta("Fren:"));
+        fila2.add(txtFrenado);
+        fila2.add(TemaF1.etiqueta("Agarre:"));
+        fila2.add(txtAgarre);
+
+        // Fila 3: Piloto
+        JPanel fila3 = new JPanel(new GridLayout(1, 2, 8, 0));
         modeloPilotos = new DefaultComboBoxModel<>();
         comboPilotos = new JComboBox<>(modeloPilotos);
+        fila3.add(TemaF1.etiqueta("Piloto:"));
+        fila3.add(comboPilotos);
+
         btnRegistrar = new JButton("Registrar / Actualizar");
 
-        panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtMarcaEscuderia);
-        panel.add(TemaF1.etiqueta("Vel. máx:"));
-        panel.add(txtVelocidadMaxima);
-        panel.add(TemaF1.etiqueta("Desgaste %:"));
-        panel.add(txtDesgaste);
-        panel.add(TemaF1.etiqueta("Piloto:"));
-        panel.add(comboPilotos);
-
         // El botón se coloca debajo, centrado, para no desbordar la fila.
-        JPanel contenedor = new JPanel(new BorderLayout());
-        contenedor.add(panel, BorderLayout.CENTER);
+        JPanel contenedor = new JPanel();
+        contenedor.setLayout(new BoxLayout(contenedor, BoxLayout.Y_AXIS));
+        contenedor.add(fila1);
+        contenedor.add(fila2);
+        contenedor.add(fila3);
 
         JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
         filaBoton.add(btnRegistrar);
-        contenedor.add(filaBoton, BorderLayout.SOUTH);
+        contenedor.add(filaBoton);
 
         return contenedor;
     }
@@ -252,7 +272,9 @@ public class VentanaVehiculos extends JFrame {
             modelo.addRow(new Object[]{
                     vehiculo.getMarcaEscuderia(),
                     vehiculo.getVelocidadMaxima(),
-                    vehiculo.getDesgasteNeumaticos(),
+                    vehiculo.getAceleracion(),
+                    vehiculo.getFrenado(),
+                    vehiculo.getAgarre(),
                     vehiculo.getPiloto().getNombre()});
 
         }
@@ -275,7 +297,9 @@ public class VentanaVehiculos extends JFrame {
 
         txtMarcaEscuderia.setText("");
         txtVelocidadMaxima.setText("");
-        txtDesgaste.setText("");
+        txtAceleracion.setText("");
+        txtFrenado.setText("");
+        txtAgarre.setText("");
 
     }
 
