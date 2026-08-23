@@ -31,9 +31,10 @@ public class VehiculoServicioImpl implements VehiculoServicio {
 
     /** Crea la entidad Vehiculo y la guarda en el repositorio. */
     @Override
-    public void registrar(String marcaEscuderia, int velocidadMaxima, double desgasteNeumaticos, Piloto piloto) {
+    public void registrar(String marcaEscuderia, int velocidadMaxima, int aceleracion,
+            int frenado, int agarre, Piloto piloto) {
 
-        Vehiculo vehiculo = new Vehiculo(marcaEscuderia, velocidadMaxima, desgasteNeumaticos, piloto);
+        Vehiculo vehiculo = new Vehiculo(marcaEscuderia, velocidadMaxima, aceleracion, frenado, agarre, piloto);
 
         vehiculosRepositorio.guardar(vehiculo);
 

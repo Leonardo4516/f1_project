@@ -12,8 +12,9 @@ import com.proyectof1.dominio.Vehiculo;
  */
 public interface VehiculoServicio {
 
-    /** Registra un nuevo vehículo asociado a un piloto. */
-    void registrar(String marcaEscuderia, int velocidadMaxima, double desgasteNeumaticos, Piloto piloto);
+    /** Registra un nuevo vehículo con sus atributos físicos asociado a un piloto. */
+    void registrar(String marcaEscuderia, int velocidadMaxima, int aceleracion,
+            int frenado, int agarre, Piloto piloto);
 
     /** Devuelve la lista de todos los vehículos registrados. */
     List<Vehiculo> listarVehiculos();
