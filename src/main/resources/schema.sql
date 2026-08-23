@@ -16,9 +16,19 @@ CREATE TABLE IF NOT EXISTS pilotos (
 CREATE TABLE IF NOT EXISTS vehiculos (
     marca_escuderia VARCHAR(100) PRIMARY KEY,
     velocidad_maxima INT NOT NULL,
-    desgaste_neumaticos DOUBLE PRECISION NOT NULL,
+    aceleracion INT NOT NULL,
+    frenado INT NOT NULL,
+    agarre INT NOT NULL,
     piloto_nombre VARCHAR(100) NOT NULL REFERENCES pilotos(nombre)
 );
+
+-- Migración para bases de datos existentes (creadas con la versión anterior
+-- que usaban la columna desgaste_neumaticos). Se elimina la columna y se
+-- añaden los nuevos atributos físicos del vehículo.
+ALTER TABLE vehiculos DROP COLUMN IF EXISTS desgaste_neumaticos;
+ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS aceleracion INT NOT NULL DEFAULT 50;
+ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS frenado INT NOT NULL DEFAULT 50;
+ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS agarre INT NOT NULL DEFAULT 50;
 
 CREATE TABLE IF NOT EXISTS ranking (
     id SERIAL PRIMARY KEY,

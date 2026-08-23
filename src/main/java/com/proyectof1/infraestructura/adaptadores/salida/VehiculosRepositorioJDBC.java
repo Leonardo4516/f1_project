@@ -27,21 +27,25 @@ public class VehiculosRepositorioJDBC implements VehiculosRepositorio {
     @Override
     public void guardar(Vehiculo vehiculo) {
 
-        String sql = "INSERT INTO vehiculos (marca_escuderia, velocidad_maxima, desgaste_neumaticos, piloto_nombre) "
-                + "VALUES (?, ?, ?, ?) "
+        String sql = "INSERT INTO vehiculos (marca_escuderia, velocidad_maxima, aceleracion, frenado, agarre, piloto_nombre) "
+                + "VALUES (?, ?, ?, ?, ?, ?) "
                 + "ON CONFLICT (marca_escuderia) DO UPDATE SET "
-                + "velocidad_maxima = ?, desgaste_neumaticos = ?, piloto_nombre = ?";
+                + "velocidad_maxima = ?, aceleracion = ?, frenado = ?, agarre = ?, piloto_nombre = ?";
 
         try (Connection conn = conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, vehiculo.getMarcaEscuderia());
             ps.setInt(2, vehiculo.getVelocidadMaxima());
-            ps.setDouble(3, vehiculo.getDesgasteNeumaticos());
-            ps.setString(4, vehiculo.getPiloto().getNombre());
-            ps.setInt(5, vehiculo.getVelocidadMaxima());
-            ps.setDouble(6, vehiculo.getDesgasteNeumaticos());
-            ps.setString(7, vehiculo.getPiloto().getNombre());
+            ps.setInt(3, vehiculo.getAceleracion());
+            ps.setInt(4, vehiculo.getFrenado());
+            ps.setInt(5, vehiculo.getAgarre());
+            ps.setString(6, vehiculo.getPiloto().getNombre());
+            ps.setInt(7, vehiculo.getVelocidadMaxima());
+            ps.setInt(8, vehiculo.getAceleracion());
+            ps.setInt(9, vehiculo.getFrenado());
+            ps.setInt(10, vehiculo.getAgarre());
+            ps.setString(11, vehiculo.getPiloto().getNombre());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -53,7 +57,7 @@ public class VehiculosRepositorioJDBC implements VehiculosRepositorio {
     public List<Vehiculo> listarTodos() {
 
         List<Vehiculo> vehiculos = new ArrayList<>();
-        String sql = "SELECT v.marca_escuderia, v.velocidad_maxima, v.desgaste_neumaticos, "
+        String sql = "SELECT v.marca_escuderia, v.velocidad_maxima, v.aceleracion, v.frenado, v.agarre, "
                 + "v.piloto_nombre, p.experiencia, p.habilidad_lluvia "
                 + "FROM vehiculos v JOIN pilotos p ON v.piloto_nombre = p.nombre "
                 + "ORDER BY v.marca_escuderia";
@@ -71,7 +75,9 @@ public class VehiculosRepositorioJDBC implements VehiculosRepositorio {
                 vehiculos.add(new Vehiculo(
                         rs.getString("marca_escuderia"),
                         rs.getInt("velocidad_maxima"),
-                        rs.getDouble("desgaste_neumaticos"),
+                        rs.getInt("aceleracion"),
+                        rs.getInt("frenado"),
+                        rs.getInt("agarre"),
                         piloto));
             }
 
@@ -85,7 +91,7 @@ public class VehiculosRepositorioJDBC implements VehiculosRepositorio {
     @Override
     public Vehiculo buscarPorEscuderia(String marcaEscuderia) {
 
-        String sql = "SELECT v.marca_escuderia, v.velocidad_maxima, v.desgaste_neumaticos, "
+        String sql = "SELECT v.marca_escuderia, v.velocidad_maxima, v.aceleracion, v.frenado, v.agarre, "
                 + "v.piloto_nombre, p.experiencia, p.habilidad_lluvia "
                 + "FROM vehiculos v JOIN pilotos p ON v.piloto_nombre = p.nombre "
                 + "WHERE v.marca_escuderia = ?";
@@ -105,7 +111,9 @@ public class VehiculosRepositorioJDBC implements VehiculosRepositorio {
                     return new Vehiculo(
                             rs.getString("marca_escuderia"),
                             rs.getInt("velocidad_maxima"),
-                            rs.getDouble("desgaste_neumaticos"),
+                            rs.getInt("aceleracion"),
+                            rs.getInt("frenado"),
+                            rs.getInt("agarre"),
                             piloto);
                 }
             }

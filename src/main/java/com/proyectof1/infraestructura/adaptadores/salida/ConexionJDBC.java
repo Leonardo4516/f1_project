@@ -81,7 +81,9 @@ public class ConexionJDBC {
             "CREATE TABLE IF NOT EXISTS vehiculos ("
                 + "marca_escuderia VARCHAR(100) PRIMARY KEY, "
                 + "velocidad_maxima INT NOT NULL, "
-                + "desgaste_neumaticos DOUBLE PRECISION NOT NULL, "
+                + "aceleracion INT NOT NULL, "
+                + "frenado INT NOT NULL, "
+                + "agarre INT NOT NULL, "
                 + "piloto_nombre VARCHAR(100) NOT NULL REFERENCES pilotos(nombre))",
 
             "CREATE TABLE IF NOT EXISTS ranking ("
