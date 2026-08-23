@@ -83,16 +83,16 @@ public class Main {
         circuitoServicio.registrar("Gran Premio de Brasil", 4.309, "Interlagos");
         circuitoServicio.registrar("Gran Premio de Bélgica", 7.004, "Spa");
 
-        registrarVehiculo(vehiculoServicio, "Red Bull", 340, verstappen);
-        registrarVehiculo(vehiculoServicio, "Ferrari", 338, leclerc);
-        registrarVehiculo(vehiculoServicio, "McLaren", 339, norris);
-        registrarVehiculo(vehiculoServicio, "Mercedes", 337, russell);
-        registrarVehiculo(vehiculoServicio, "Aston Martin", 334, alonso);
-        registrarVehiculo(vehiculoServicio, "Williams", 329, albon);
-        registrarVehiculo(vehiculoServicio, "Alpine", 331, gasly);
-        registrarVehiculo(vehiculoServicio, "Haas", 326, bearman);
-        registrarVehiculo(vehiculoServicio, "Racing Bulls", 330, tsunoda);
-        registrarVehiculo(vehiculoServicio, "Sauber", 325, hulkenberg);
+        registrarVehiculo(vehiculoServicio, "Red Bull", 340, 95, 94, 92, verstappen);
+        registrarVehiculo(vehiculoServicio, "Ferrari", 338, 92, 93, 90, leclerc);
+        registrarVehiculo(vehiculoServicio, "McLaren", 339, 93, 91, 89, norris);
+        registrarVehiculo(vehiculoServicio, "Mercedes", 337, 91, 92, 88, russell);
+        registrarVehiculo(vehiculoServicio, "Aston Martin", 334, 85, 84, 85, alonso);
+        registrarVehiculo(vehiculoServicio, "Williams", 329, 80, 81, 80, albon);
+        registrarVehiculo(vehiculoServicio, "Alpine", 331, 83, 82, 83, gasly);
+        registrarVehiculo(vehiculoServicio, "Haas", 326, 78, 77, 78, bearman);
+        registrarVehiculo(vehiculoServicio, "Racing Bulls", 330, 82, 80, 81, tsunoda);
+        registrarVehiculo(vehiculoServicio, "Sauber", 325, 76, 75, 76, hulkenberg);
     }
 
     private static Piloto registrarPiloto(PilotoServicio pilotoServicio,
@@ -102,7 +102,7 @@ public class Main {
     }
 
     private static void registrarVehiculo(VehiculoServicio vehiculoServicio,
-            String escuderia, int velocidadMaxima, Piloto piloto) {
-        vehiculoServicio.registrar(escuderia, velocidadMaxima, 0.0, piloto);
+            String escuderia, int velocidadMaxima, int aceleracion, int frenado, int agarre, Piloto piloto) {
+        vehiculoServicio.registrar(escuderia, velocidadMaxima, aceleracion, frenado, agarre, piloto);
     }
 }
