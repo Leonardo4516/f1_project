@@ -218,46 +218,36 @@ public class VentanaVehiculos extends JFrame {
     /** Construye la fila inferior del sur: formulario para registrar/actualizar. */
     private JPanel construirPanelFormulario() {
 
-        // Fila 1: Escudería y Velocidad máxima
-        JPanel fila1 = new JPanel(new GridLayout(1, 4, 8, 0));
-        txtMarcaEscuderia = new JTextField(9);
-        txtVelocidadMaxima = new JTextField(5);
-        fila1.add(TemaF1.etiqueta("Escudería:"));
-        fila1.add(txtMarcaEscuderia);
-        fila1.add(TemaF1.etiqueta("Vel. máx:"));
-        fila1.add(txtVelocidadMaxima);
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 0, 4));
 
-        // Fila 2: Aceleración, Frenado y Agarre
-        JPanel fila2 = new JPanel(new GridLayout(1, 6, 8, 0));
-        txtAceleracion = new JTextField(4);
-        txtFrenado = new JTextField(4);
-        txtAgarre = new JTextField(4);
-        fila2.add(TemaF1.etiqueta("Acel:"));
-        fila2.add(txtAceleracion);
-        fila2.add(TemaF1.etiqueta("Fren:"));
-        fila2.add(txtFrenado);
-        fila2.add(TemaF1.etiqueta("Agarre:"));
-        fila2.add(txtAgarre);
-
-        // Fila 3: Piloto
-        JPanel fila3 = new JPanel(new GridLayout(1, 2, 8, 0));
+        txtMarcaEscuderia = new JTextField(16);
+        txtVelocidadMaxima = new JTextField(8);
+        txtAceleracion = new JTextField(8);
+        txtFrenado = new JTextField(8);
+        txtAgarre = new JTextField(8);
         modeloPilotos = new DefaultComboBoxModel<>();
         comboPilotos = new JComboBox<>(modeloPilotos);
-        fila3.add(TemaF1.etiqueta("Piloto:"));
-        fila3.add(comboPilotos);
-
         btnRegistrar = new JButton("Registrar / Actualizar");
 
-        // El botón se coloca debajo, centrado, para no desbordar la fila.
-        JPanel contenedor = new JPanel();
-        contenedor.setLayout(new BoxLayout(contenedor, BoxLayout.Y_AXIS));
-        contenedor.add(fila1);
-        contenedor.add(fila2);
-        contenedor.add(fila3);
+        panel.add(TemaF1.etiqueta("Escudería:"));
+        panel.add(txtMarcaEscuderia);
+        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
+        panel.add(txtVelocidadMaxima);
+        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
+        panel.add(txtAceleracion);
+        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
+        panel.add(txtFrenado);
+        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
+        panel.add(txtAgarre);
+        panel.add(TemaF1.etiqueta("Piloto:"));
+        panel.add(comboPilotos);
+
+        JPanel contenedor = new JPanel(new BorderLayout());
+        contenedor.add(panel, BorderLayout.CENTER);
 
         JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
         filaBoton.add(btnRegistrar);
-        contenedor.add(filaBoton);
+        contenedor.add(filaBoton, BorderLayout.SOUTH);
 
         return contenedor;
     }

@@ -180,22 +180,20 @@ public class VentanaPilotos extends JFrame {
     /** Construye la fila inferior del sur: formulario para registrar/actualizar. */
     private JPanel construirPanelFormulario() {
 
-        // Usa GridLayout para que todos los pares etiqueta-campo queden alineados.
-        JPanel panel = new JPanel(new GridLayout(1, 6, 8, 0));
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 0, 4));
 
-        txtNombre = new JTextField(10);
-        txtExperiencia = new JTextField(5);
-        txtHabilidadLluvia = new JTextField(5);
+        txtNombre = new JTextField(16);
+        txtExperiencia = new JTextField(8);
+        txtHabilidadLluvia = new JTextField(8);
         btnRegistrar = new JButton("Registrar / Actualizar");
 
         panel.add(TemaF1.etiqueta("Nombre:"));
         panel.add(txtNombre);
-        panel.add(TemaF1.etiqueta("Experiencia:"));
+        panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
         panel.add(txtExperiencia);
-        panel.add(TemaF1.etiqueta("Lluvia:"));
+        panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
         panel.add(txtHabilidadLluvia);
 
-        // El botón se coloca debajo, centrado, para no desbordar la fila.
         JPanel contenedor = new JPanel(new BorderLayout());
         contenedor.add(panel, BorderLayout.CENTER);
 

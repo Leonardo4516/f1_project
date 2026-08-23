@@ -176,46 +176,43 @@ public class VentanaCircuitos extends JFrame {
 
     private JPanel construirPanelFormulario() {
 
-        JPanel fila1 = new JPanel(new GridLayout(1, 6, 8, 0));
-        txtNombre = new JTextField(10);
-        txtKilometros = new JTextField(5);
-        txtUbicacion = new JTextField(10);
-        txtNumCurvas = new JTextField(4);
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.insets = new java.awt.Insets(4, 8, 4, 8);
+        gbc.anchor = java.awt.GridBagConstraints.EAST;
+        gbc.fill = java.awt.GridBagConstraints.NONE;
+
+        JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 0, 4));
+
+        txtNombre = new JTextField(16);
+        txtKilometros = new JTextField(8);
+        txtUbicacion = new JTextField(16);
+        txtNumCurvas = new JTextField(6);
         comboTipoCircuito = new JComboBox<>(new String[]{"Permanente", "Urbano", "Semiacotico"});
-        txtVueltasTipicas = new JTextField(4);
-
-        fila1.add(TemaF1.etiqueta("Nombre:"));
-        fila1.add(txtNombre);
-        fila1.add(TemaF1.etiqueta("Km:"));
-        fila1.add(txtKilometros);
-        fila1.add(TemaF1.etiqueta("Ubicación:"));
-        fila1.add(txtUbicacion);
-
-        JPanel fila2 = new JPanel(new GridLayout(1, 6, 8, 0));
-        txtRecordVuelta = new JTextField(15);
-
-        fila2.add(TemaF1.etiqueta("Curvas:"));
-        fila2.add(txtNumCurvas);
-        fila2.add(TemaF1.etiqueta("Tipo:"));
-        fila2.add(comboTipoCircuito);
-        fila2.add(TemaF1.etiqueta("Vueltas:"));
-        fila2.add(txtVueltasTipicas);
-
-        JPanel fila3 = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        fila3.add(TemaF1.etiqueta("Récord:"));
-        fila3.add(txtRecordVuelta);
-
+        txtVueltasTipicas = new JTextField(6);
+        txtRecordVuelta = new JTextField(16);
         btnRegistrar = new JButton("Registrar / Actualizar");
 
-        JPanel contenedor = new JPanel();
-        contenedor.setLayout(new BoxLayout(contenedor, BoxLayout.Y_AXIS));
-        contenedor.add(fila1);
-        contenedor.add(fila2);
-        contenedor.add(fila3);
+        panel.add(TemaF1.etiqueta("Nombre:"));
+        panel.add(txtNombre);
+        panel.add(TemaF1.etiqueta("Kilómetros:"));
+        panel.add(txtKilometros);
+        panel.add(TemaF1.etiqueta("Ubicación:"));
+        panel.add(txtUbicacion);
+        panel.add(TemaF1.etiqueta("Nº Curvas:"));
+        panel.add(txtNumCurvas);
+        panel.add(TemaF1.etiqueta("Tipo circuito:"));
+        panel.add(comboTipoCircuito);
+        panel.add(TemaF1.etiqueta("Vueltas típicas:"));
+        panel.add(txtVueltasTipicas);
+        panel.add(TemaF1.etiqueta("Récord vuelta:"));
+        panel.add(txtRecordVuelta);
+
+        JPanel contenedor = new JPanel(new BorderLayout());
+        contenedor.add(panel, BorderLayout.CENTER);
 
         JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
         filaBoton.add(btnRegistrar);
-        contenedor.add(filaBoton);
+        contenedor.add(filaBoton, BorderLayout.SOUTH);
 
         return contenedor;
     }
