@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -92,11 +91,6 @@ public class VentanaPrincipal extends JFrame {
         menu.add(Box.createVerticalStrut(14));
         menu.add(btnArcade);
         add(menu, BorderLayout.CENTER);
-
-        // ----- Pie con una nota estilizada. -----
-        JPanel pie = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
-        pie.add(TemaF1.etiqueta("Proyecto F1 · Arquitectura hexagonal"));
-        add(pie, BorderLayout.SOUTH);
 
         // Cada botón abre su ventana encima del menú principal.
         btnCircuitos.addActionListener(e -> {
