@@ -139,6 +139,34 @@ public class SimulacionService {
     }
 
     /**
+     * Calcula la velocidad efectiva del vehículo en km/h SIN incluir el factor
+     * de experiencia del piloto. Se usa para la telemetría en vivo, donde la
+     * velocidad refleja el rendimiento físico del coche, no la habilidad del piloto.
+     *
+     * @param vehiculo  Vehículo del que se calcula la velocidad.
+     * @param circuito  Circuito (no se usa aquí, pero se mantiene por consistencia).
+     * @param compuesto Compuesto de neumáticos montado.
+     * @param desgaste  Desgaste actual de neumáticos (0-100).
+     * @return Velocidad efectiva en km/h.
+     */
+    public double calcularVelocidad(Vehiculo vehiculo, Circuito circuito,
+            CompuestoNeumatico compuesto, double desgaste) {
+
+        double penalizacionDesgaste = desgaste * 0.05;
+
+        double velocidadEfectiva = vehiculo.getVelocidadMaxima()
+                - compuesto.getPerdidaVelocidad() - penalizacionDesgaste;
+
+        double factorAceleracion = 0.80 + (vehiculo.getAceleracion() / 100.0) * 0.20;
+        double factorFrenado = 0.80 + (vehiculo.getFrenado() / 100.0) * 0.20;
+        double factorAgarre = 0.85 + (vehiculo.getAgarre() / 100.0) * 0.15;
+
+        velocidadEfectiva *= factorAceleracion * factorFrenado * factorAgarre;
+
+        return Math.max(velocidadEfectiva, 1.0);
+    }
+
+    /**
      * Simula una sesión de clasificación de una vuelta lanzada por cada vehículo.
      *
      * @param vehiculos Vehículos que participan en la clasificación.

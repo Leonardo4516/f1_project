@@ -191,8 +191,9 @@ public class CarreraEnVivo {
             // Varianza vuelta a vuelta: ±0.3s simulando inconsistencia humana.
             tiempoVuelta += (azar.nextDouble() * 2.0 - 1.0) * VARIANZA_VUELTA;
 
-            // Velocidad media equivalente en km/h y metros recorridos en el paso.
-            double velocidad = kmPorVuelta / (tiempoVuelta / 3600.0);
+            // Velocidad efectiva del coche (sin factor experiencia) para la telemetría.
+            double velocidad = simulacion.calcularVelocidad(
+                    auto.getVehiculo(), circuito, auto.getCompuesto(), auto.getDesgaste());
 
             // Bajo safety car, todos los autos reducen a la velocidad del SC.
             if (safetyCarActivo) {
