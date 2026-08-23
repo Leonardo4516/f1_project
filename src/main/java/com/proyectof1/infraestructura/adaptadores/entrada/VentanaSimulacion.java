@@ -106,9 +106,10 @@ public class VentanaSimulacion extends JFrame {
     // Motor de la carrera en curso (null fuera de una carrera).
     private CarreraEnVivo carrera;
 
-    // Control de velocidad y pausa de la carrera.
-    private boolean carreraPausada;
-    private int multiplicadorVelocidad = 1;
+    // Control de velocidad y pausa de la carrera (volatile: compartidos entre
+    // hiloCarrera y el EDT de Swing).
+    private volatile boolean carreraPausada;
+    private volatile int multiplicadorVelocidad = 1;
     private Thread hiloCarrera;
     private JButton btnPausa;
     private JButton btn1x;
