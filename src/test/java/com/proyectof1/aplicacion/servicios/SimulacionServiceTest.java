@@ -26,7 +26,7 @@ class SimulacionServiceTest {
     }
 
     private Vehiculo vehiculo(Piloto piloto, String escuderia, int velocidad) {
-        return new Vehiculo(escuderia, velocidad, 0.0, piloto);
+        return new Vehiculo(escuderia, velocidad, 50, 50, 50, piloto);
     }
 
     private Circuito circuito() {
@@ -64,14 +64,20 @@ class SimulacionServiceTest {
     }
 
     @Test
-    void desgasteAumentaSegunElCompuesto() {
+    void atributosFisicosAfectanElTiempo() {
 
-        Vehiculo auto = vehiculo(new Piloto("Charles Leclerc", 93, 92), "Ferrari", 338);
         SimulacionService servicio = new SimulacionService(climaFijo("Seco"));
+        Circuito circuito = circuito();
+        Piloto piloto = new Piloto("Leclerc", 93, 92);
 
-        servicio.simularVuelta(auto, circuito(), "Seco", CompuestoNeumatico.BLANDO);
+        Vehiculo basico = new Vehiculo("Ferrari", 338, 50, 50, 50, piloto);
+        Vehiculo potente = new Vehiculo("Ferrari", 338, 95, 94, 92, piloto);
 
-        assertEquals(CompuestoNeumatico.BLANDO.getDesgastePorVuelta(), auto.getDesgasteNeumaticos(), 0.001);
+        double tiempoBasico = servicio.simularVuelta(basico, circuito, "Seco", CompuestoNeumatico.BLANDO);
+        double tiempoPotente = servicio.simularVuelta(potente, circuito, "Seco", CompuestoNeumatico.BLANDO);
+
+        assertTrue(tiempoPotente < tiempoBasico,
+                "Un vehículo con mejores atributos físicos debe ser más rápido");
 
     }
 
@@ -93,13 +99,6 @@ class SimulacionServiceTest {
 
         // La lista original no se modifica.
         assertEquals("Lento", autos.get(0).getPiloto().getNombre());
-
-        // La clasificación no debe aumentar el desgaste de los vehículos.
-        for (Vehiculo auto : autos) {
-
-            assertEquals(0.0, auto.getDesgasteNeumaticos(), 0.001);
-
-        }
 
     }
 

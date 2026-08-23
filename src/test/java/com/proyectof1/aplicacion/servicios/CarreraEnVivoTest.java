@@ -32,7 +32,7 @@ class CarreraEnVivoTest {
     }
 
     private static Vehiculo vehiculo(String nombrePiloto, String escuderia, int velocidad) {
-        return new Vehiculo(escuderia, velocidad, 0.0, new Piloto(nombrePiloto, 90, 80));
+        return new Vehiculo(escuderia, velocidad, 50, 50, 50, new Piloto(nombrePiloto, 90, 80));
     }
 
     private static List<Vehiculo> parrillaDeTres() {
@@ -311,8 +311,8 @@ class CarreraEnVivoTest {
     void autosIdenticosTienenDistintasMejoresVueltas() {
 
         // Dos autos idénticos (misma velocidad, mismo piloto).
-        Vehiculo v1 = new Vehiculo("Red Bull", 340, 0.0, new Piloto("Max", 90, 80));
-        Vehiculo v2 = new Vehiculo("Red Bull", 340, 0.0, new Piloto("Max", 90, 80));
+        Vehiculo v1 = new Vehiculo("Red Bull", 340, 50, 50, 50, new Piloto("Max", 90, 80));
+        Vehiculo v2 = new Vehiculo("Red Bull", 340, 50, 50, 50, new Piloto("Max", 90, 80));
 
         List<Vehiculo> parrilla = new ArrayList<>(Arrays.asList(v1, v2));
         CarreraEnVivo carrera = new CarreraEnVivo(parrilla, circuito(), "Seco", null, 20);
@@ -423,7 +423,7 @@ class CarreraEnVivoTest {
         List<Vehiculo> parrilla = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
 
-            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 0.0,
+            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 50, 50, 50,
                     new Piloto("Piloto" + i, 90, 80)));
 
         }
@@ -471,7 +471,7 @@ class CarreraEnVivoTest {
         List<Vehiculo> parrilla = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
 
-            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 0.0,
+            parrilla.add(new Vehiculo("Escuderia" + i, 340 - i, 50, 50, 50,
                     new Piloto("Piloto" + i, 90, 80)));
 
         }
