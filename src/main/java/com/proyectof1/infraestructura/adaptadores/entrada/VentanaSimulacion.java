@@ -6,7 +6,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -219,7 +218,7 @@ public class VentanaSimulacion extends JFrame {
         etiquetaClima = TemaF1.etiqueta("--");
 
         filaCircuito.add(TemaF1.etiqueta("Circuito:"));
-        filaCircuito.add(comboCircuito);
+        filaCircuito.add(comboCircuitos);
         filaCircuito.add(Box.createHorizontalStrut(20));
         filaCircuito.add(TemaF1.etiqueta("Clima:"));
         filaCircuito.add(etiquetaClima);
