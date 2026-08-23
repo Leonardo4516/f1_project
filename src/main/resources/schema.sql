@@ -4,7 +4,11 @@
 CREATE TABLE IF NOT EXISTS circuitos (
     nombre VARCHAR(100) PRIMARY KEY,
     kilometros DOUBLE PRECISION NOT NULL,
-    ubicacion VARCHAR(200) NOT NULL
+    ubicacion VARCHAR(200) NOT NULL,
+    num_curvas INT NOT NULL DEFAULT 0,
+    tipo_circuito VARCHAR(50) NOT NULL DEFAULT '',
+    vueltas_tipicas INT NOT NULL DEFAULT 0,
+    record_vuelta VARCHAR(200) NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS pilotos (
@@ -29,6 +33,12 @@ ALTER TABLE vehiculos DROP COLUMN IF EXISTS desgaste_neumaticos;
 ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS aceleracion INT NOT NULL DEFAULT 50;
 ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS frenado INT NOT NULL DEFAULT 50;
 ALTER TABLE vehiculos ADD COLUMN IF NOT EXISTS agarre INT NOT NULL DEFAULT 50;
+
+-- Migración: agregar características técnicas a circuitos existentes.
+ALTER TABLE circuitos ADD COLUMN IF NOT EXISTS num_curvas INT NOT NULL DEFAULT 0;
+ALTER TABLE circuitos ADD COLUMN IF NOT EXISTS tipo_circuito VARCHAR(50) NOT NULL DEFAULT '';
+ALTER TABLE circuitos ADD COLUMN IF NOT EXISTS vueltas_tipicas INT NOT NULL DEFAULT 0;
+ALTER TABLE circuitos ADD COLUMN IF NOT EXISTS record_vuelta VARCHAR(200) NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS ranking (
     id SERIAL PRIMARY KEY,

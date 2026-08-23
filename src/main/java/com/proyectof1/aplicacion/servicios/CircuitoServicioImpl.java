@@ -30,9 +30,11 @@ public class CircuitoServicioImpl implements CircuitoServicio {
 
     /** Crea la entidad Circuito y la guarda en el repositorio. */
     @Override
-    public void registrar(String nombre, double kilometros, String ubicacion) {
+    public void registrar(String nombre, double kilometros, String ubicacion,
+            int numCurvas, String tipoCircuito, int vueltasTipicas, String recordVuelta) {
 
-        Circuito circuito = new Circuito(nombre, kilometros, ubicacion);
+        Circuito circuito = new Circuito(nombre, kilometros, ubicacion,
+                numCurvas, tipoCircuito, vueltasTipicas, recordVuelta);
 
         circuitosRepositorio.guardar(circuito);
 

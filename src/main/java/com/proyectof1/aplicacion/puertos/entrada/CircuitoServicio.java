@@ -11,8 +11,9 @@ import com.proyectof1.dominio.Circuito;
  */
 public interface CircuitoServicio {
 
-    /** Registra un nuevo circuito. */
-    void registrar(String nombre, double kilometros, String ubicacion);
+    /** Registra un nuevo circuito con todas sus características. */
+    void registrar(String nombre, double kilometros, String ubicacion,
+            int numCurvas, String tipoCircuito, int vueltasTipicas, String recordVuelta);
 
     /** Devuelve la lista de todos los circuitos registrados. */
     List<Circuito> listarCircuitos();

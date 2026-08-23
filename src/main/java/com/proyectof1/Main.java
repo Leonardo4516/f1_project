@@ -76,12 +76,12 @@ public class Main {
         Piloto tsunoda = registrarPiloto(pilotoServicio, "Yuki Tsunoda", 83, 70);
         Piloto hulkenberg = registrarPiloto(pilotoServicio, "Nico Hulkenberg", 88, 82);
 
-        circuitoServicio.registrar("Gran Premio de Italia", 5.793, "Monza");
-        circuitoServicio.registrar("Gran Premio de Mónaco", 3.337, "Mónaco");
-        circuitoServicio.registrar("Gran Premio de Gran Bretaña", 5.891, "Silverstone");
-        circuitoServicio.registrar("Gran Premio de Japón", 5.807, "Suzuka");
-        circuitoServicio.registrar("Gran Premio de Brasil", 4.309, "Interlagos");
-        circuitoServicio.registrar("Gran Premio de Bélgica", 7.004, "Spa");
+        circuitoServicio.registrar("Gran Premio de Italia", 5.793, "Monza, Italia", 11, "Permanente", 53, "1:21.046 - Rubens Barrichello, 2004");
+        circuitoServicio.registrar("Gran Premio de Mónaco", 3.337, "Monte Carlo, Mónaco", 19, "Urbano", 78, "1:12.909 - Lewis Hamilton, 2021");
+        circuitoServicio.registrar("Gran Premio de Gran Bretaña", 5.891, "Silverstone, Reino Unido", 18, "Permanente", 52, "1:27.097 - Max Verstappen, 2020");
+        circuitoServicio.registrar("Gran Premio de Japón", 5.807, "Suzuka, Japón", 18, "Permanente", 53, "1:30.983 - Lewis Hamilton, 2019");
+        circuitoServicio.registrar("Gran Premio de Brasil", 4.309, "Interlagos, Brasil", 15, "Permanente", 71, "1:10.540 - Valtteri Bottas, 2018");
+        circuitoServicio.registrar("Gran Premio de Bélgica", 7.004, "Spa-Francorchamps, Bélgica", 20, "Permanente", 44, "1:46.286 - Valtteri Bottas, 2018");
 
         registrarVehiculo(vehiculoServicio, "Red Bull", 340, 95, 94, 92, verstappen);
         registrarVehiculo(vehiculoServicio, "Ferrari", 338, 92, 93, 90, leclerc);

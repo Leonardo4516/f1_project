@@ -25,9 +25,10 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
     @Override
     public void guardar(Circuito circuito) {
 
-        String sql = "INSERT INTO circuitos (nombre, kilometros, ubicacion) "
-                + "VALUES (?, ?, ?) "
-                + "ON CONFLICT (nombre) DO UPDATE SET kilometros = ?, ubicacion = ?";
+        String sql = "INSERT INTO circuitos (nombre, kilometros, ubicacion, num_curvas, tipo_circuito, vueltas_tipicas, record_vuelta) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?) "
+                + "ON CONFLICT (nombre) DO UPDATE SET kilometros = ?, ubicacion = ?, "
+                + "num_curvas = ?, tipo_circuito = ?, vueltas_tipicas = ?, record_vuelta = ?";
 
         try (Connection conn = conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -35,8 +36,16 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
             ps.setString(1, circuito.getNombre());
             ps.setDouble(2, circuito.getKilometros());
             ps.setString(3, circuito.getUbicacion());
-            ps.setDouble(4, circuito.getKilometros());
-            ps.setString(5, circuito.getUbicacion());
+            ps.setInt(4, circuito.getNumCurvas());
+            ps.setString(5, circuito.getTipoCircuito());
+            ps.setInt(6, circuito.getVueltasTipicas());
+            ps.setString(7, circuito.getRecordVuelta());
+            ps.setDouble(8, circuito.getKilometros());
+            ps.setString(9, circuito.getUbicacion());
+            ps.setInt(10, circuito.getNumCurvas());
+            ps.setString(11, circuito.getTipoCircuito());
+            ps.setInt(12, circuito.getVueltasTipicas());
+            ps.setString(13, circuito.getRecordVuelta());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -48,7 +57,8 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
     public List<Circuito> listarTodos() {
 
         List<Circuito> circuitos = new ArrayList<>();
-        String sql = "SELECT nombre, kilometros, ubicacion FROM circuitos ORDER BY nombre";
+        String sql = "SELECT nombre, kilometros, ubicacion, num_curvas, tipo_circuito, vueltas_tipicas, record_vuelta "
+                + "FROM circuitos ORDER BY nombre";
 
         try (Connection conn = conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -58,7 +68,11 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
                 circuitos.add(new Circuito(
                         rs.getString("nombre"),
                         rs.getDouble("kilometros"),
-                        rs.getString("ubicacion")));
+                        rs.getString("ubicacion"),
+                        rs.getInt("num_curvas"),
+                        rs.getString("tipo_circuito"),
+                        rs.getInt("vueltas_tipicas"),
+                        rs.getString("record_vuelta")));
             }
 
         } catch (SQLException e) {
@@ -71,7 +85,8 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
     @Override
     public Circuito buscarPorNombre(String nombre) {
 
-        String sql = "SELECT nombre, kilometros, ubicacion FROM circuitos WHERE nombre = ?";
+        String sql = "SELECT nombre, kilometros, ubicacion, num_curvas, tipo_circuito, vueltas_tipicas, record_vuelta "
+                + "FROM circuitos WHERE nombre = ?";
 
         try (Connection conn = conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -83,7 +98,11 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
                     return new Circuito(
                             rs.getString("nombre"),
                             rs.getDouble("kilometros"),
-                            rs.getString("ubicacion"));
+                            rs.getString("ubicacion"),
+                            rs.getInt("num_curvas"),
+                            rs.getString("tipo_circuito"),
+                            rs.getInt("vueltas_tipicas"),
+                            rs.getString("record_vuelta"));
                 }
             }
 
@@ -98,8 +117,8 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
     public List<Circuito> buscarPorUbicacion(String ubicacion) {
 
         List<Circuito> circuitos = new ArrayList<>();
-        String sql = "SELECT nombre, kilometros, ubicacion FROM circuitos "
-                + "WHERE UPPER(ubicacion) = UPPER(?) ORDER BY nombre";
+        String sql = "SELECT nombre, kilometros, ubicacion, num_curvas, tipo_circuito, vueltas_tipicas, record_vuelta "
+                + "FROM circuitos WHERE UPPER(ubicacion) = UPPER(?) ORDER BY nombre";
 
         try (Connection conn = conexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -111,7 +130,11 @@ public class CircuitosRepositorioJDBC implements CircuitosRepositorio {
                     circuitos.add(new Circuito(
                             rs.getString("nombre"),
                             rs.getDouble("kilometros"),
-                            rs.getString("ubicacion")));
+                            rs.getString("ubicacion"),
+                            rs.getInt("num_curvas"),
+                            rs.getString("tipo_circuito"),
+                            rs.getInt("vueltas_tipicas"),
+                            rs.getString("record_vuelta")));
                 }
             }
 

@@ -71,7 +71,11 @@ public class ConexionJDBC {
             "CREATE TABLE IF NOT EXISTS circuitos ("
                 + "nombre VARCHAR(100) PRIMARY KEY, "
                 + "kilometros DOUBLE PRECISION NOT NULL, "
-                + "ubicacion VARCHAR(200) NOT NULL)",
+                + "ubicacion VARCHAR(200) NOT NULL, "
+                + "num_curvas INT NOT NULL DEFAULT 0, "
+                + "tipo_circuito VARCHAR(50) NOT NULL DEFAULT '', "
+                + "vueltas_tipicas INT NOT NULL DEFAULT 0, "
+                + "record_vuelta VARCHAR(200) NOT NULL DEFAULT '')",
 
             "CREATE TABLE IF NOT EXISTS pilotos ("
                 + "nombre VARCHAR(100) PRIMARY KEY, "
