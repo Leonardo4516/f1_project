@@ -1,14 +1,13 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.util.Objects;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -16,28 +15,17 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
+import net.miginfocom.swing.MigLayout;
+
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.dominio.Circuito;
 
-/**
- * Ventana de gestión de circuitos (adaptador de entrada en Swing).
- * Lista los circuitos en una tabla y permite registrar, actualizar,
- * buscar y eliminar mediante el puerto de entrada CircuitoServicio.
- */
 public class VentanaCircuitos extends JFrame {
 
     private final CircuitoServicio circuitoServicio;
 
     private DefaultTableModel modelo;
     private JTable tabla;
-
-    private JTextField txtNombre;
-    private JTextField txtKilometros;
-    private JTextField txtUbicacion;
-    private JTextField txtNumCurvas;
-    private JComboBox<String> comboTipoCircuito;
-    private JTextField txtVueltasTipicas;
-    private JTextField txtRecordVuelta;
     private JTextField txtBuscar;
 
     private JButton btnRegistrar;
@@ -45,24 +33,43 @@ public class VentanaCircuitos extends JFrame {
     private JButton btnBuscar;
 
     public VentanaCircuitos(CircuitoServicio circuitoServicio) {
-
         this.circuitoServicio = Objects.requireNonNull(circuitoServicio,
                 "El servicio de circuitos no puede ser nulo.");
 
         setTitle("Administración de Circuitos");
-        setSize(720, 560);
+        setSize(750, 500);
+        setMinimumSize(new java.awt.Dimension(500, 350));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JPanel cabecera = new JPanel(new BorderLayout());
-        cabecera.setBorder(TemaF1.margenes(12, 6, 16, 16));
-        cabecera.add(TemaF1.titulo("Circuitos"), BorderLayout.WEST);
+        JPanel cabecera = new JPanel(new MigLayout("insets 8 16 8 16, gap 10", "[grow][]20[]", "[]"));
+        cabecera.setBackground(TemaF1.FONDO);
+        cabecera.add(TemaF1.titulo("Circuitos"), "growx");
 
-        btnEliminar = new JButton("Eliminar seleccionado");
+        btnRegistrar = new JButton(TemaF1.icono("add"));
+        btnRegistrar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnRegistrar);
+        cabecera.add(btnRegistrar, "w 140!");
+
+        btnEliminar = new JButton(TemaF1.icono("delete"));
+        btnEliminar.setText(" Eliminar");
         TemaF1.estilizarBoton(btnEliminar);
-        cabecera.add(btnEliminar, BorderLayout.EAST);
-
+        cabecera.add(btnEliminar, "w 140!");
         add(cabecera, BorderLayout.NORTH);
+
+        JPanel barraBusqueda = new JPanel(new MigLayout("insets 4 16 4 16, gap 8", "[][grow][]", "[]"));
+        barraBusqueda.setBackground(TemaF1.FONDO);
+        txtBuscar = new JTextField();
+        btnBuscar = new JButton(TemaF1.icono("search"));
+        btnBuscar.setText(" Buscar");
+        barraBusqueda.add(TemaF1.etiqueta("Nombre:"));
+        barraBusqueda.add(txtBuscar, "growx, wmin 100");
+        barraBusqueda.add(btnBuscar, "w 120!");
+
+        JPanel sur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
+        sur.setBackground(TemaF1.FONDO);
+        sur.setBorder(TemaF1.margenes(0, 0, 8, 0));
+        sur.add(barraBusqueda, "growx");
 
         modelo = new DefaultTableModel(new String[]{
                 "Nombre", "Km", "Ubicación", "Curvas", "Tipo", "Vueltas", "Récord"
@@ -74,73 +81,30 @@ public class VentanaCircuitos extends JFrame {
         };
         tabla = new JTable(modelo);
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabla.setRowHeight(26);
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        tabla.setRowHeight(28);
+        sur.add(new JScrollPane(tabla), "grow");
+        add(sur, BorderLayout.CENTER);
 
-        JPanel cuerpoSur = new JPanel();
-        cuerpoSur.setLayout(new BoxLayout(cuerpoSur, BoxLayout.Y_AXIS));
-        cuerpoSur.setBorder(TemaF1.margenes(8, 12, 16, 16));
-        cuerpoSur.add(construirPanelBusqueda());
-        cuerpoSur.add(construirPanelFormulario());
-        add(cuerpoSur, BorderLayout.SOUTH);
-
-        btnRegistrar.addActionListener(e -> {
-
-            try {
-
-                String nombre = txtNombre.getText();
-                double kilometros = Double.parseDouble(txtKilometros.getText());
-                String ubicacion = txtUbicacion.getText();
-                int numCurvas = Integer.parseInt(txtNumCurvas.getText());
-                String tipoCircuito = (String) comboTipoCircuito.getSelectedItem();
-                int vueltasTipicas = Integer.parseInt(txtVueltasTipicas.getText());
-                String recordVuelta = txtRecordVuelta.getText();
-
-                circuitoServicio.registrar(nombre, kilometros, ubicacion,
-                        numCurvas, tipoCircuito, vueltasTipicas, recordVuelta);
-
-                actualizarTabla();
-                limpiarCampos();
-
-            } catch (Exception ex) {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
-                        "Registro de circuito", javax.swing.JOptionPane.ERROR_MESSAGE);
-
-            }
-        });
+        btnRegistrar.addActionListener(e -> mostrarDialogoRegistro());
 
         btnEliminar.addActionListener(e -> {
-
             int fila = tabla.getSelectedRow();
-
             if (fila < 0) {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Selecciona un circuito de la tabla.");
+                JOptionPane.showMessageDialog(this, "Selecciona un circuito de la tabla.");
                 return;
-
             }
-
             String nombre = (String) modelo.getValueAt(fila, 0);
-
             if (circuitoServicio.eliminar(nombre)) {
-
                 actualizarTabla();
-
             } else {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "No se encontró el circuito.");
-
+                JOptionPane.showMessageDialog(this, "No se encontró el circuito.");
             }
         });
 
         btnBuscar.addActionListener(e -> {
-
             Circuito encontrado = circuitoServicio.buscarPorNombre(txtBuscar.getText());
-
             if (encontrado != null) {
-
-                javax.swing.JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(this,
                         "Circuito: " + encontrado.getNombre()
                                 + " | " + encontrado.getKilometros() + " km"
                                 + " | " + encontrado.getUbicacion()
@@ -148,81 +112,94 @@ public class VentanaCircuitos extends JFrame {
                                 + " | Tipo: " + encontrado.getTipoCircuito()
                                 + " | Vueltas: " + encontrado.getVueltasTipicas()
                                 + "\nRécord: " + encontrado.getRecordVuelta());
-
             } else {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Circuito no encontrado.");
-
+                JOptionPane.showMessageDialog(this, "Circuito no encontrado.");
             }
         });
 
         actualizarTabla();
-
     }
 
-    private JPanel construirPanelBusqueda() {
+    private void mostrarDialogoRegistro() {
+        JDialog dialogo = new JDialog(this, "Registrar Circuito", true);
+        dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JTextField txtNombre = new JTextField();
+        JTextField txtKilometros = new JTextField();
+        JTextField txtUbicacion = new JTextField();
+        JTextField txtNumCurvas = new JTextField();
+        JComboBox<String> comboTipo = new JComboBox<>(new String[]{"Permanente", "Urbano", "Semiacotico"});
+        JTextField txtVueltas = new JTextField();
+        JTextField txtRecord = new JTextField();
 
-        txtBuscar = new JTextField(18);
-        btnBuscar = new JButton("Buscar por nombre");
+        JButton btnAceptar = new JButton(TemaF1.icono("add"));
+        btnAceptar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnAceptar);
 
-        panel.add(TemaF1.etiqueta("Nombre a buscar:"));
-        panel.add(txtBuscar);
-        panel.add(btnBuscar);
+        JButton btnCancelar = new JButton("Cancelar");
+        TemaF1.estilizarBoton(btnCancelar);
 
-        return panel;
-    }
-
-    private JPanel construirPanelFormulario() {
-
-        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
-        gbc.insets = new java.awt.Insets(4, 8, 4, 8);
-        gbc.anchor = java.awt.GridBagConstraints.EAST;
-        gbc.fill = java.awt.GridBagConstraints.NONE;
-
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 0, 4));
-
-        txtNombre = new JTextField(16);
-        txtKilometros = new JTextField(8);
-        txtUbicacion = new JTextField(16);
-        txtNumCurvas = new JTextField(6);
-        comboTipoCircuito = new JComboBox<>(new String[]{"Permanente", "Urbano", "Semiacotico"});
-        txtVueltasTipicas = new JTextField(6);
-        txtRecordVuelta = new JTextField(16);
-        btnRegistrar = new JButton("Registrar / Actualizar");
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill, flowy",
+                "[right]rel[grow,fill]",
+                "[][][][][][][]20[]"));
+        panel.setBackground(TemaF1.FONDO);
 
         panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre);
+        panel.add(txtNombre, "growx");
+
         panel.add(TemaF1.etiqueta("Kilómetros:"));
-        panel.add(txtKilometros);
+        panel.add(txtKilometros, "growx");
+
         panel.add(TemaF1.etiqueta("Ubicación:"));
-        panel.add(txtUbicacion);
+        panel.add(txtUbicacion, "growx");
+
         panel.add(TemaF1.etiqueta("Nº Curvas:"));
-        panel.add(txtNumCurvas);
-        panel.add(TemaF1.etiqueta("Tipo circuito:"));
-        panel.add(comboTipoCircuito);
+        panel.add(txtNumCurvas, "growx");
+
+        panel.add(TemaF1.etiqueta("Tipo:"));
+        panel.add(comboTipo, "growx");
+
         panel.add(TemaF1.etiqueta("Vueltas típicas:"));
-        panel.add(txtVueltasTipicas);
-        panel.add(TemaF1.etiqueta("Récord vuelta:"));
-        panel.add(txtRecordVuelta);
+        panel.add(txtVueltas, "growx");
 
-        JPanel contenedor = new JPanel(new BorderLayout());
-        contenedor.add(panel, BorderLayout.CENTER);
+        panel.add(TemaF1.etiqueta("Récord de vuelta:"));
+        panel.add(txtRecord, "growx");
 
-        JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        filaBoton.add(btnRegistrar);
-        contenedor.add(filaBoton, BorderLayout.SOUTH);
+        panel.add(btnAceptar, "w 140!");
+        panel.add(btnCancelar, "w 120!");
 
-        return contenedor;
+        dialogo.setContentPane(panel);
+        dialogo.setSize(450, 460);
+        dialogo.setLocationRelativeTo(this);
+
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+
+        btnAceptar.addActionListener(e -> {
+            try {
+                String nombre = txtNombre.getText();
+                double kilometros = Double.parseDouble(txtKilometros.getText());
+                String ubicacion = txtUbicacion.getText();
+                int numCurvas = Integer.parseInt(txtNumCurvas.getText());
+                String tipo = (String) comboTipo.getSelectedItem();
+                int vueltas = Integer.parseInt(txtVueltas.getText());
+                String record = txtRecord.getText();
+
+                circuitoServicio.registrar(nombre, kilometros, ubicacion, numCurvas, tipo, vueltas, record);
+                actualizarTabla();
+                dialogo.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, "Error: " + ex.getMessage(),
+                        "Registro de circuito", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        dialogo.setVisible(true);
     }
 
     private void actualizarTabla() {
-
         modelo.setRowCount(0);
-
         for (Circuito circuito : circuitoServicio.listarCircuitos()) {
-
             modelo.addRow(new Object[]{
                     circuito.getNombre(),
                     circuito.getKilometros(),
@@ -232,19 +209,6 @@ public class VentanaCircuitos extends JFrame {
                     circuito.getVueltasTipicas(),
                     circuito.getRecordVuelta()
             });
-
         }
     }
-
-    private void limpiarCampos() {
-
-        txtNombre.setText("");
-        txtKilometros.setText("");
-        txtUbicacion.setText("");
-        txtNumCurvas.setText("");
-        txtVueltasTipicas.setText("");
-        txtRecordVuelta.setText("");
-
-    }
-
 }

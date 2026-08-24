@@ -1,13 +1,12 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.util.Objects;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -15,64 +14,62 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
+import net.miginfocom.swing.MigLayout;
+
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.dominio.Piloto;
 
-/**
- * Ventana de gestión de pilotos (adaptador de entrada en Swing).
- * Lista los pilotos en una tabla y permite registrar, actualizar,
- * buscar y eliminar mediante el puerto de entrada PilotoServicio.
- */
 public class VentanaPilotos extends JFrame {
 
-    // Servicio de pilotos (puerto de entrada) inyectado.
     private final PilotoServicio pilotoServicio;
-
-    // Modelo de datos que alimenta la JTable (no editable).
     private DefaultTableModel modelo;
-
     private JTable tabla;
-
-    // Campos de texto del formulario.
-    private JTextField txtNombre;
-    private JTextField txtExperiencia;
-    private JTextField txtHabilidadLluvia;
     private JTextField txtBuscar;
 
-    // Botones de acción.
     private JButton btnRegistrar;
     private JButton btnEliminar;
     private JButton btnBuscar;
 
-    /**
-     * Constructor de la ventana. Recibe el servicio de pilotos.
-     * Se valida que no sea nulo.
-     */
     public VentanaPilotos(PilotoServicio pilotoServicio) {
-
         this.pilotoServicio = Objects.requireNonNull(pilotoServicio,
                 "El servicio de pilotos no puede ser nulo.");
 
-        // Configuración básica de la ventana.
         setTitle("Administración de Pilotos");
-        setSize(580, 500);
+        setSize(620, 480);
+        setMinimumSize(new java.awt.Dimension(450, 300));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // ----- Cabecera: título y botón de eliminar. -----
-        JPanel cabecera = new JPanel(new BorderLayout());
-        cabecera.setBorder(TemaF1.margenes(12, 6, 16, 16));
-        cabecera.add(TemaF1.titulo("Pilotos"), BorderLayout.WEST);
+        JPanel cabecera = new JPanel(new MigLayout("insets 8 16 8 16, gap 10", "[grow][]20[]", "[]"));
+        cabecera.setBackground(TemaF1.FONDO);
+        cabecera.add(TemaF1.titulo("Pilotos"), "growx");
 
-        btnEliminar = new JButton("Eliminar seleccionado");
+        btnRegistrar = new JButton(TemaF1.icono("add"));
+        btnRegistrar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnRegistrar);
+        cabecera.add(btnRegistrar, "w 140!");
+
+        btnEliminar = new JButton(TemaF1.icono("delete"));
+        btnEliminar.setText(" Eliminar");
         TemaF1.estilizarBoton(btnEliminar);
-        cabecera.add(btnEliminar, BorderLayout.EAST);
-
+        cabecera.add(btnEliminar, "w 140!");
         add(cabecera, BorderLayout.NORTH);
 
-        // ----- Centro: tabla con los pilotos. -----
-        modelo = new DefaultTableModel(new String[]{"Nombre", "Experiencia (1-100)", "Habilidad lluvia (1-100)"}, 0) {
+        JPanel barraBusqueda = new JPanel(new MigLayout("insets 4 16 4 16, gap 8", "[][grow][]", "[]"));
+        barraBusqueda.setBackground(TemaF1.FONDO);
+        txtBuscar = new JTextField();
+        btnBuscar = new JButton(TemaF1.icono("search"));
+        btnBuscar.setText(" Buscar");
+        barraBusqueda.add(TemaF1.etiqueta("Nombre:"));
+        barraBusqueda.add(txtBuscar, "growx, wmin 100");
+        barraBusqueda.add(btnBuscar, "w 120!");
 
+        JPanel sur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
+        sur.setBackground(TemaF1.FONDO);
+        sur.setBorder(TemaF1.margenes(0, 0, 8, 0));
+        sur.add(barraBusqueda, "growx");
+
+        modelo = new DefaultTableModel(new String[]{"Nombre", "Experiencia (1-100)", "Habilidad lluvia (1-100)"}, 0) {
             @Override
             public boolean isCellEditable(int fila, int columna) {
                 return false;
@@ -80,149 +77,101 @@ public class VentanaPilotos extends JFrame {
         };
         tabla = new JTable(modelo);
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabla.setRowHeight(26);
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        tabla.setRowHeight(28);
+        sur.add(new JScrollPane(tabla), "grow");
+        add(sur, BorderLayout.CENTER);
 
-        // ----- Sur: fila de búsqueda y fila de formulario. -----
-        JPanel cuerpoSur = new JPanel();
-        cuerpoSur.setLayout(new BoxLayout(cuerpoSur, BoxLayout.Y_AXIS));
-        cuerpoSur.setBorder(TemaF1.margenes(8, 12, 16, 16));
-        cuerpoSur.add(construirPanelBusqueda());
-        cuerpoSur.add(construirPanelFormulario());
-        add(cuerpoSur, BorderLayout.SOUTH);
+        btnRegistrar.addActionListener(e -> mostrarDialogoRegistro());
 
-        // Acción del botón Registrar: lee los campos, llama al servicio y refresca.
-        btnRegistrar.addActionListener(e -> {
-
-            try {
-
-                String nombre = txtNombre.getText();
-                int experiencia = Integer.parseInt(txtExperiencia.getText());
-                int habilidadLluvia = Integer.parseInt(txtHabilidadLluvia.getText());
-
-                pilotoServicio.registrar(nombre, experiencia, habilidadLluvia);
-
-                actualizarTabla();
-                limpiarCampos();
-
-            } catch (Exception ex) {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
-                        "Registro de piloto", javax.swing.JOptionPane.ERROR_MESSAGE);
-
-            }
-        });
-
-        // Acción del botón Eliminar: borra el piloto seleccionado de la tabla.
         btnEliminar.addActionListener(e -> {
-
             int fila = tabla.getSelectedRow();
-
             if (fila < 0) {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Selecciona un piloto de la tabla.");
+                JOptionPane.showMessageDialog(this, "Selecciona un piloto de la tabla.");
                 return;
-
             }
-
             String nombre = (String) modelo.getValueAt(fila, 0);
-
             if (pilotoServicio.eliminar(nombre)) {
-
                 actualizarTabla();
-
             } else {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "No se encontró el piloto.");
-
+                JOptionPane.showMessageDialog(this, "No se encontró el piloto.");
             }
         });
 
-        // Acción del botón Buscar: muestra los datos del piloto encontrado.
         btnBuscar.addActionListener(e -> {
-
             Piloto encontrado = pilotoServicio.buscarPorNombre(txtBuscar.getText());
-
             if (encontrado != null) {
-
-                javax.swing.JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(this,
                         "Piloto: " + encontrado.getNombre()
                                 + " | Exp: " + encontrado.getExperiencia()
                                 + " | Lluvia: " + encontrado.getHabilidadLluvia());
-
             } else {
-
-                javax.swing.JOptionPane.showMessageDialog(this, "Piloto no encontrado.");
-
+                JOptionPane.showMessageDialog(this, "Piloto no encontrado.");
             }
         });
 
-        // Al abrir la ventana se carga la tabla con los pilotos existentes.
         actualizarTabla();
-
     }
 
-    /** Construye la fila superior del sur: búsqueda por nombre. */
-    private JPanel construirPanelBusqueda() {
+    private void mostrarDialogoRegistro() {
+        JDialog dialogo = new JDialog(this, "Registrar Piloto", true);
+        dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JTextField txtNombre = new JTextField();
+        JTextField txtExperiencia = new JTextField();
+        JTextField txtHabilidadLluvia = new JTextField();
 
-        txtBuscar = new JTextField(18);
-        btnBuscar = new JButton("Buscar por nombre");
+        JButton btnAceptar = new JButton(TemaF1.icono("add"));
+        btnAceptar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnAceptar);
 
-        panel.add(TemaF1.etiqueta("Nombre a buscar:"));
-        panel.add(txtBuscar);
-        panel.add(btnBuscar);
+        JButton btnCancelar = new JButton("Cancelar");
+        TemaF1.estilizarBoton(btnCancelar);
 
-        return panel;
-    }
-
-    /** Construye la fila inferior del sur: formulario para registrar/actualizar. */
-    private JPanel construirPanelFormulario() {
-
-        JPanel panel = new JPanel(new java.awt.GridLayout(0, 2, 0, 4));
-
-        txtNombre = new JTextField(16);
-        txtExperiencia = new JTextField(8);
-        txtHabilidadLluvia = new JTextField(8);
-        btnRegistrar = new JButton("Registrar / Actualizar");
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill, flowy",
+                "[right]rel[grow,fill]",
+                "[][][]20[]"));
+        panel.setBackground(TemaF1.FONDO);
 
         panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre);
+        panel.add(txtNombre, "growx");
+
         panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
-        panel.add(txtExperiencia);
+        panel.add(txtExperiencia, "growx");
+
         panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
-        panel.add(txtHabilidadLluvia);
+        panel.add(txtHabilidadLluvia, "growx");
 
-        JPanel contenedor = new JPanel(new BorderLayout());
-        contenedor.add(panel, BorderLayout.CENTER);
+        panel.add(btnAceptar, "w 140!");
+        panel.add(btnCancelar, "w 120!");
 
-        JPanel filaBoton = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        filaBoton.add(btnRegistrar);
-        contenedor.add(filaBoton, BorderLayout.SOUTH);
+        dialogo.setContentPane(panel);
+        dialogo.setSize(400, 280);
+        dialogo.setLocationRelativeTo(this);
 
-        return contenedor;
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+
+        btnAceptar.addActionListener(e -> {
+            try {
+                String nombre = txtNombre.getText();
+                int experiencia = Integer.parseInt(txtExperiencia.getText());
+                int habilidadLluvia = Integer.parseInt(txtHabilidadLluvia.getText());
+                pilotoServicio.registrar(nombre, experiencia, habilidadLluvia);
+                actualizarTabla();
+                dialogo.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, "Error: " + ex.getMessage(),
+                        "Registro de piloto", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        dialogo.setVisible(true);
     }
 
-    /** Refresca la tabla mostrando todos los pilotos del servicio. */
     private void actualizarTabla() {
-
         modelo.setRowCount(0);
-
         for (Piloto piloto : pilotoServicio.listarPilotos()) {
-
             modelo.addRow(new Object[]{piloto.getNombre(), piloto.getExperiencia(), piloto.getHabilidadLluvia()});
-
         }
     }
-
-    /** Vacía los campos de texto del formulario. */
-    private void limpiarCampos() {
-
-        txtNombre.setText("");
-        txtExperiencia.setText("");
-        txtHabilidadLluvia.setText("");
-
-    }
-
 }

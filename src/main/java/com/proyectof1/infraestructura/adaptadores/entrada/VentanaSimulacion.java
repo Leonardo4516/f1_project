@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ItemEvent;
 import java.util.ArrayList;
@@ -15,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -37,6 +34,11 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.servicios.CarreraEnVivo;
@@ -49,65 +51,35 @@ import com.proyectof1.dominio.ResultadoCarrera;
 import com.proyectof1.dominio.ResultadoParticipante;
 import com.proyectof1.dominio.Vehiculo;
 
-/**
- * Ventana de simulación de carreras (adaptador de entrada en Swing).
- * Permite configurar la carrera (circuito, clima, compuesto de neumáticos y
- * vueltas), ver la parrilla de salida tras una clasificación y correr una
- * carrera en vivo con toda la parrilla: clasificación actualizada por tick,
- * eventos (paradas, abandonos, vuelta rápida) y resultado final con el
- * ganador. Mantiene la arquitectura hexagonal: toda la lógica vive en
- * {@link CarreraEnVivo} (capa de aplicación) y esta ventana solo presenta.
- */
+import net.miginfocom.swing.MigLayout;
+
 public class VentanaSimulacion extends JFrame {
 
-    // Segundos simulados que se avanzan en cada tick de la interfaz (ritmo de la demo).
     private static final double PASO_SIMULADO = 10.0;
-
-    // Pausa real entre ticks para que el ojo pueda seguir la carrera.
     private static final int ESPERA_TICK_MS = 500;
-
-    // Colores temáticos propios de la ventana (abandonos y vuelta rápida).
     private static final Color COLOR_DNF = new Color(0xFF6B5E);
     private static final Color COLOR_VUELTA_RAPIDA = new Color(0xF7C948);
 
-    // Servicios inyectados.
     private final CircuitoServicio circuitoServicio;
     private final VehiculoServicio vehiculoServicio;
     private final SimulacionService simulacionService;
 
-    // Desplegables para elegir circuito y condiciones.
     private JComboBox<Circuito> comboCircuitos;
     private JComboBox<CompuestoNeumatico> comboCompuesto;
     private JComboBox<Integer> comboVueltas;
-
-    // Etiqueta que muestra el clima real que devolvió la API para la zona del circuito.
     private JLabel etiquetaClima;
-
-    // Contador para descartar consultas de clima obsoletas.
     private int consultaClimaId;
 
-    // Botones de acción.
     private JButton btnIniciar;
     private JButton btnClasificacion;
-
-    // Barra de progreso que muestra el avance de la carrera.
     private JProgressBar barProgreso;
 
-    // Tabla con la clasificación en vivo y su modelo (no editable).
     private JTable tablaRanking;
     private DefaultTableModel modeloRanking;
-
-    // Registro de eventos de la carrera con colores temáticos.
     private JTextPane areaEventos;
-
-    // Parrilla de salida calculada en la clasificación.
     private List<Vehiculo> parrillaActual;
-
-    // Motor de la carrera en curso (null fuera de una carrera).
     private CarreraEnVivo carrera;
 
-    // Control de velocidad y pausa de la carrera (volatile: compartidos entre
-    // hiloCarrera y el EDT de Swing).
     private volatile boolean carreraPausada;
     private volatile int multiplicadorVelocidad = 1;
     private Thread hiloCarrera;
@@ -116,66 +88,57 @@ public class VentanaSimulacion extends JFrame {
     private JButton btn2x;
     private JButton btn4x;
 
-    // Etiquetas de telemetría del auto seleccionado.
     private JLabel lblTelemetriaVelocidad;
     private JLabel lblTelemetriaDesgaste;
     private JLabel lblTelemetriaCompuesto;
     private JLabel lblTelemetriaParadas;
     private JLabel lblTelemetriaUltimaVuelta;
 
-    /**
-     * Constructor de la ventana. Recibe los servicios y valida que no sean nulos.
-     */
-    public VentanaSimulacion(CircuitoServicio circuitoServicio, VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
+    private JFreeChart graficaVelocidad;
+    private XYSeriesCollection graficaDataset;
+    private int tiempoGrafica;
 
+    public VentanaSimulacion(CircuitoServicio circuitoServicio, VehiculoServicio vehiculoServicio, SimulacionService simulacionService) {
         this.circuitoServicio = Objects.requireNonNull(circuitoServicio, "Los servicios no pueden ser nulos.");
         this.vehiculoServicio = Objects.requireNonNull(vehiculoServicio, "Los servicios no pueden ser nulos.");
         this.simulacionService = Objects.requireNonNull(simulacionService, "Los servicios no pueden ser nulos.");
 
         setTitle("Simulador de Fórmula 1");
-        setSize(920, 700);
+        setSize(960, 750);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(0, 0));
 
-        // ===== NORTE: Cabecera con título =====
-        JPanel cabecera = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 8));
+        JPanel cabecera = new JPanel(new MigLayout("insets 8 16 8 16", "[]", "[]"));
         cabecera.setBackground(TemaF1.FONDO);
         cabecera.add(TemaF1.titulo("Simulador de Fórmula 1"));
         add(cabecera, BorderLayout.NORTH);
 
-        // ===== CENTRO: Zona principal de carrera =====
-        JPanel zonaCentral = new JPanel(new BorderLayout(0, 0));
-        zonaCentral.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        JPanel zonaCentral = new JPanel(new MigLayout("insets 0 8 0 8, fill", "[grow]", "[][grow][]"));
+        zonaCentral.setBackground(TemaF1.FONDO);
 
-        // Barra de progreso
         barProgreso = new JProgressBar(0, 100);
         barProgreso.setStringPainted(true);
         barProgreso.setString("Configura tu carrera y presiona Iniciar");
         barProgreso.setPreferredSize(new Dimension(0, 28));
-        zonaCentral.add(barProgreso, BorderLayout.NORTH);
+        zonaCentral.add(barProgreso, "growx, wrap");
 
-        // Split pane: ranking arriba, eventos abajo
         JSplitPane panelCentral = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
                 construirPanelRanking(), construirPanelEventos());
         panelCentral.setResizeWeight(0.55);
         panelCentral.setDividerLocation(320);
         panelCentral.setBorder(null);
-        zonaCentral.add(panelCentral, BorderLayout.CENTER);
+        zonaCentral.add(panelCentral, "grow, wrap");
 
-        // Panel de controles de pausa/velocidad debajo del split
         JPanel panelControles = construirPanelControles();
-        zonaCentral.add(panelControles, BorderLayout.SOUTH);
+        zonaCentral.add(panelControles, "growx");
 
         add(zonaCentral, BorderLayout.CENTER);
 
-        // ===== SUR: Configuración de carrera =====
         JPanel configuracion = construirPanelConfiguracion();
         add(configuracion, BorderLayout.SOUTH);
 
-        // ---- Acciones. ----
         conectarAcciones();
 
-        // Mensaje de bienvenida
         anadirEvento("Bienvenido al simulador.", TemaF1.TEXTO);
         anadirEvento("1. Elige circuito, compuesto y vueltas.", TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("   El clima se obtiene automáticamente de la zona del circuito.", TemaF1.TEXTO_SECUNDARIO);
@@ -184,26 +147,15 @@ public class VentanaSimulacion extends JFrame {
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
 
         actualizarClimaDelCircuito();
-
     }
 
-    // =====================================================================
-    //  CONSTRUCCIÓN DE PANELES
-    // =====================================================================
-
-    /** Panel de configuración: circuito, compuesto, vueltas y botones principales. */
     private JPanel construirPanelConfiguracion() {
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 8 12 8 12, gap 8",
+                "[][grow,fill][][grow,fill][][grow,fill]",
+                "[]4[]"));
         panel.setBackground(TemaF1.FONDO);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE),
-                TemaF1.margenes(10, 12, 12, 12)));
-
-        // --- Fila 1: Circuito + Clima ---
-        JPanel filaCircuito = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        filaCircuito.setBackground(TemaF1.FONDO);
+        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE));
 
         comboCircuitos = new JComboBox<>();
         for (Circuito circuito : circuitoServicio.listarCircuitos()) {
@@ -217,53 +169,42 @@ public class VentanaSimulacion extends JFrame {
 
         etiquetaClima = TemaF1.etiqueta("--");
 
-        filaCircuito.add(TemaF1.etiqueta("Circuito:"));
-        filaCircuito.add(comboCircuitos);
-        filaCircuito.add(Box.createHorizontalStrut(20));
-        filaCircuito.add(TemaF1.etiqueta("Clima:"));
-        filaCircuito.add(etiquetaClima);
-
-        // --- Fila 2: Compuesto + Vueltas + Botones ---
-        JPanel filaEstrategia = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        filaEstrategia.setBackground(TemaF1.FONDO);
-
         comboCompuesto = new JComboBox<>(CompuestoNeumatico.values());
         comboCompuesto.setSelectedItem(CompuestoNeumatico.MEDIO);
 
         comboVueltas = new JComboBox<>(new Integer[]{3, 5, 10, 20, 40});
         comboVueltas.setSelectedItem(10);
 
-        btnClasificacion = new JButton("Clasificación");
+        btnClasificacion = new JButton(TemaF1.icono("flag"));
+        btnClasificacion.setText(" Clasificación");
         TemaF1.estilizarBoton(btnClasificacion);
 
-        btnIniciar = new JButton("Iniciar carrera");
+        btnIniciar = new JButton(TemaF1.icono("play"));
+        btnIniciar.setText(" Iniciar carrera");
         TemaF1.estilizarBoton(btnIniciar);
 
-        filaEstrategia.add(TemaF1.etiqueta("Compuesto:"));
-        filaEstrategia.add(comboCompuesto);
-        filaEstrategia.add(Box.createHorizontalStrut(10));
-        filaEstrategia.add(TemaF1.etiqueta("Vueltas:"));
-        filaEstrategia.add(comboVueltas);
-        filaEstrategia.add(Box.createHorizontalStrut(20));
-        filaEstrategia.add(btnClasificacion);
-        filaEstrategia.add(Box.createHorizontalStrut(8));
-        filaEstrategia.add(btnIniciar);
+        panel.add(TemaF1.etiqueta("Circuito:"));
+        panel.add(comboCircuitos);
+        panel.add(TemaF1.etiqueta("Clima:"));
+        panel.add(etiquetaClima);
+        panel.add(btnClasificacion, "w 140!");
+        panel.add(btnIniciar, "w 140!, wrap");
 
-        panel.add(filaCircuito);
-        panel.add(filaEstrategia);
+        panel.add(TemaF1.etiqueta("Compuesto:"));
+        panel.add(comboCompuesto);
+        panel.add(TemaF1.etiqueta("Vueltas:"));
+        panel.add(comboVueltas);
 
         return panel;
     }
 
-    /** Panel de clasificación en vivo + telemetría. */
     private JPanel construirPanelRanking() {
+        JPanel panel = new JPanel(new MigLayout("insets 0, fill", "[grow]", "[][grow][]"));
 
-        JPanel panel = new JPanel(new BorderLayout(0, 0));
-
-        JPanel tituloPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel tituloPanel = new JPanel(new MigLayout("insets 4 8 4 8", "[]"));
         tituloPanel.setBackground(TemaF1.PANEL);
         tituloPanel.add(TemaF1.subtitulo("Clasificación en vivo"));
-        panel.add(tituloPanel, BorderLayout.NORTH);
+        panel.add(tituloPanel, "growx, wrap");
 
         modeloRanking = new DefaultTableModel(
                 new String[]{"Pos", "Escudería", "Piloto", "Gap", "Estado"}, 0) {
@@ -286,36 +227,45 @@ public class VentanaSimulacion extends JFrame {
 
         JScrollPane scroll = new JScrollPane(tablaRanking);
         scroll.setBorder(BorderFactory.createLineBorder(TemaF1.BORDE, 1));
-        panel.add(scroll, BorderLayout.CENTER);
+        panel.add(scroll, "grow, wrap");
 
-        panel.add(construirPanelTelemetria(), BorderLayout.SOUTH);
+        JPanel panelTelemetria = construirPanelTelemetria();
+        panel.add(panelTelemetria, "growx");
 
         return panel;
     }
 
-    /** Panel de telemetría del auto seleccionado. */
     private JPanel construirPanelTelemetria() {
-
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 4));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE),
-                TemaF1.margenes(6, 4, 4, 4)));
+        JPanel panel = new JPanel(new MigLayout("insets 6 12 4 12, gap 16", "[][][][][]"));
         panel.setBackground(TemaF1.PANEL);
+        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE));
 
-        lblTelemetriaVelocidad = TemaF1.etiqueta("Vel: -- km/h");
-        lblTelemetriaDesgaste = TemaF1.etiqueta("Desgaste: -- %");
-        lblTelemetriaCompuesto = TemaF1.etiqueta("Compuesto: --");
-        lblTelemetriaParadas = TemaF1.etiqueta("Paradas: --");
-        lblTelemetriaUltimaVuelta = TemaF1.etiqueta("Última vuelta: --");
+        Font fuenteMono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+
+        lblTelemetriaVelocidad = TemaF1.etiqueta("Vel:  ---- km/h");
+        lblTelemetriaVelocidad.setFont(fuenteMono);
+        lblTelemetriaVelocidad.setPreferredSize(new Dimension(130, 18));
+
+        lblTelemetriaDesgaste = TemaF1.etiqueta("Desg: ---.- %%");
+        lblTelemetriaDesgaste.setFont(fuenteMono);
+        lblTelemetriaDesgaste.setPreferredSize(new Dimension(110, 18));
+
+        lblTelemetriaCompuesto = TemaF1.etiqueta("Comp: ------");
+        lblTelemetriaCompuesto.setFont(fuenteMono);
+        lblTelemetriaCompuesto.setPreferredSize(new Dimension(120, 18));
+
+        lblTelemetriaParadas = TemaF1.etiqueta("Pits: --");
+        lblTelemetriaParadas.setFont(fuenteMono);
+        lblTelemetriaParadas.setPreferredSize(new Dimension(70, 18));
+
+        lblTelemetriaUltimaVuelta = TemaF1.etiqueta("Vuelta: --.-- s");
+        lblTelemetriaUltimaVuelta.setFont(fuenteMono);
+        lblTelemetriaUltimaVuelta.setPreferredSize(new Dimension(130, 18));
 
         panel.add(lblTelemetriaVelocidad);
-        panel.add(Box.createHorizontalStrut(16));
         panel.add(lblTelemetriaDesgaste);
-        panel.add(Box.createHorizontalStrut(16));
         panel.add(lblTelemetriaCompuesto);
-        panel.add(Box.createHorizontalStrut(16));
         panel.add(lblTelemetriaParadas);
-        panel.add(Box.createHorizontalStrut(16));
         panel.add(lblTelemetriaUltimaVuelta);
 
         tablaRanking.getSelectionModel().addListSelectionListener(e -> {
@@ -327,15 +277,13 @@ public class VentanaSimulacion extends JFrame {
         return panel;
     }
 
-    /** Panel de eventos de la carrera. */
     private JPanel construirPanelEventos() {
+        JPanel panel = new JPanel(new MigLayout("insets 0, fill", "[grow]", "[][grow]"));
 
-        JPanel panel = new JPanel(new BorderLayout(0, 0));
-
-        JPanel tituloPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel tituloPanel = new JPanel(new MigLayout("insets 4 8 4 8", "[]"));
         tituloPanel.setBackground(TemaF1.PANEL);
         tituloPanel.add(TemaF1.subtitulo("Eventos de la carrera"));
-        panel.add(tituloPanel, BorderLayout.NORTH);
+        panel.add(tituloPanel, "growx, wrap");
 
         areaEventos = new JTextPane();
         areaEventos.setEditable(false);
@@ -345,21 +293,18 @@ public class VentanaSimulacion extends JFrame {
 
         JScrollPane scroll = new JScrollPane(areaEventos);
         scroll.setBorder(BorderFactory.createLineBorder(TemaF1.BORDE, 1));
-        panel.add(scroll, BorderLayout.CENTER);
+        panel.add(scroll, "grow");
 
         return panel;
     }
 
-    /** Panel de controles de pausa y velocidad durante la carrera. */
     private JPanel construirPanelControles() {
-
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 6));
+        JPanel panel = new JPanel(new MigLayout("insets 6 8 6 8, gap 4", "[][][][][][]", "[][grow]"));
         panel.setBackground(TemaF1.FONDO);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE),
-                TemaF1.margenes(4, 4, 4, 4)));
+        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE));
 
-        btnPausa = new JButton("⏸ Pausa");
+        btnPausa = new JButton(TemaF1.icono("pause"));
+        btnPausa.setText(" Pausa");
         TemaF1.estilizarBoton(btnPausa);
         btnPausa.setEnabled(false);
 
@@ -379,23 +324,44 @@ public class VentanaSimulacion extends JFrame {
         btn4x.addActionListener(e -> setVelocidad(4));
 
         panel.add(TemaF1.etiqueta("Control:"));
-        panel.add(btnPausa);
-        panel.add(Box.createHorizontalStrut(20));
+        panel.add(btnPausa, "w 100!");
         panel.add(TemaF1.etiqueta("Velocidad:"));
-        panel.add(btn1x);
-        panel.add(btn2x);
-        panel.add(btn4x);
+        panel.add(btn1x, "w 50!");
+        panel.add(btn2x, "w 50!");
+        panel.add(btn4x, "w 50!");
+
+        JPanel panelGrafica = construirPanelGrafica();
+        panel.add(panelGrafica, "span, growx, gap top 8");
 
         return panel;
     }
 
-    // =====================================================================
-    //  LÓGICA DE CONTROLES
-    // =====================================================================
+    private JPanel construirPanelGrafica() {
+        graficaDataset = new XYSeriesCollection();
+        graficaVelocidad = TemaF1.crearGraficaVelocidad("Velocidad en vivo", graficaDataset);
+
+        ChartPanel chartPanel = new ChartPanel(graficaVelocidad);
+        chartPanel.setPreferredSize(new Dimension(400, 180));
+        chartPanel.setBackground(TemaF1.PANEL);
+
+        JPanel panel = new JPanel(new MigLayout("insets 4, fill", "[grow]", "[grow]"));
+        panel.setBackground(TemaF1.PANEL);
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(TemaF1.BORDE, 1),
+                " Gráfica de velocidad ",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                panel.getFont().deriveFont(Font.BOLD, 12f),
+                TemaF1.TEXTO_SECUNDARIO));
+        panel.add(chartPanel, "grow");
+
+        return panel;
+    }
 
     private void togglePausa() {
         carreraPausada = !carreraPausada;
-        btnPausa.setText(carreraPausada ? "▶ Reanudar" : "⏸ Pausa");
+        btnPausa.setText(carreraPausada ? " Reanudar" : " Pausa");
+        btnPausa.setIcon(carreraPausada ? TemaF1.icono("play") : TemaF1.icono("pause"));
     }
 
     private void setVelocidad(int multiplicador) {
@@ -405,14 +371,8 @@ public class VentanaSimulacion extends JFrame {
         btn4x.setEnabled(multiplicadorVelocidad != 4);
     }
 
-    // =====================================================================
-    //  ACCIONES
-    // =====================================================================
-
     private void conectarAcciones() {
-
         btnClasificacion.addActionListener(e -> {
-
             Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
             List<Vehiculo> vehiculos = vehiculoServicio.listarVehiculos();
 
@@ -444,9 +404,7 @@ public class VentanaSimulacion extends JFrame {
         btnIniciar.addActionListener(e -> iniciarCarrera());
     }
 
-    /** Prepara la carrera y lanza el hilo que la va avanzando por ticks. */
     private void iniciarCarrera() {
-
         Circuito circuito = (Circuito) comboCircuitos.getSelectedItem();
         if (circuito == null) {
             JOptionPane.showMessageDialog(this, "No hay circuitos registrados.");
@@ -486,6 +444,13 @@ public class VentanaSimulacion extends JFrame {
         barProgreso.setValue(0);
         barProgreso.setString("Carrera en curso...");
 
+        graficaDataset.removeAllSeries();
+        tiempoGrafica = 0;
+        for (Vehiculo v : parrilla) {
+            XYSeries serie = new XYSeries(v.getMarcaEscuderia());
+            graficaDataset.addSeries(serie);
+        }
+
         anadirEvento("=== CARRERA: " + circuito.getNombre() + " (" + circuito.getUbicacion() + ") ===", TemaF1.ROJO_F1);
         anadirEvento("Clima: " + clima + " | Compuesto: " + compuesto.getEtiqueta() + " | Vueltas: " + vueltas, TemaF1.TEXTO_SECUNDARIO);
         anadirEvento("", TemaF1.TEXTO_SECUNDARIO);
@@ -507,6 +472,7 @@ public class VentanaSimulacion extends JFrame {
 
                     SwingUtilities.invokeLater(() -> {
                         actualizarRanking();
+                        actualizarGrafica();
                         for (int i = ultimoEvento[0]; i < eventos.size(); i++) {
                             anadirEvento(eventos.get(i), colorDeEvento(eventos.get(i)));
                         }
@@ -532,10 +498,6 @@ public class VentanaSimulacion extends JFrame {
         });
         hiloCarrera.start();
     }
-
-    // =====================================================================
-    //  ACTUALIZACIÓN DE ESTADO
-    // =====================================================================
 
     private void actualizarRanking() {
         modeloRanking.setRowCount(0);
@@ -569,16 +531,28 @@ public class VentanaSimulacion extends JFrame {
         actualizarTelemetria();
     }
 
+    private void actualizarGrafica() {
+        if (carrera == null) return;
+        tiempoGrafica++;
+
+        List<AutoEnCarrera> ranking = carrera.ranking();
+        for (int i = 0; i < ranking.size() && i < graficaDataset.getSeriesCount(); i++) {
+            AutoEnCarrera auto = ranking.get(i);
+            XYSeries serie = graficaDataset.getSeries(i);
+            serie.add(tiempoGrafica, auto.getVelocidadActual());
+        }
+    }
+
     private void actualizarTelemetria() {
         if (carrera == null) return;
 
         int filaSeleccionada = tablaRanking.getSelectedRow();
         if (filaSeleccionada < 0) {
-            lblTelemetriaVelocidad.setText("Vel: -- km/h");
-            lblTelemetriaDesgaste.setText("Desgaste: -- %");
-            lblTelemetriaCompuesto.setText("Compuesto: --");
-            lblTelemetriaParadas.setText("Paradas: --");
-            lblTelemetriaUltimaVuelta.setText("Última vuelta: --");
+            lblTelemetriaVelocidad.setText("Vel:  ---- km/h");
+            lblTelemetriaDesgaste.setText("Desg: ---.- %%");
+            lblTelemetriaCompuesto.setText("Comp: ------");
+            lblTelemetriaParadas.setText("Pits: --");
+            lblTelemetriaUltimaVuelta.setText("Vuelta: --.-- s");
             return;
         }
 
@@ -586,15 +560,15 @@ public class VentanaSimulacion extends JFrame {
         if (filaSeleccionada < ranking.size()) {
             AutoEnCarrera auto = ranking.get(filaSeleccionada);
 
-            lblTelemetriaVelocidad.setText(String.format("Vel: %.0f km/h", auto.getVelocidadActual()));
-            lblTelemetriaDesgaste.setText(String.format("Desgaste: %.1f %%", auto.getDesgaste()));
-            lblTelemetriaCompuesto.setText("Compuesto: " + auto.getCompuesto().getEtiqueta());
-            lblTelemetriaParadas.setText("Paradas: " + auto.getParadas());
+            lblTelemetriaVelocidad.setText(String.format("Vel: %4.0f km/h", auto.getVelocidadActual()));
+            lblTelemetriaDesgaste.setText(String.format("Desg: %5.1f %%", auto.getDesgaste()));
+            lblTelemetriaCompuesto.setText(String.format("Comp: %-6s", auto.getCompuesto().getEtiqueta()));
+            lblTelemetriaParadas.setText(String.format("Pits: %2d", auto.getParadas()));
 
             String ultimaVuelta = auto.getHoraUltimaVuelta() > 0
-                    ? String.format(Locale.US, "%.2f s", auto.getHoraUltimaVuelta())
-                    : "--";
-            lblTelemetriaUltimaVuelta.setText("Última vuelta: " + ultimaVuelta);
+                    ? String.format(Locale.US, "%5.2f s", auto.getHoraUltimaVuelta())
+                    : "--.-- s";
+            lblTelemetriaUltimaVuelta.setText("Vuelta: " + ultimaVuelta);
         }
     }
 
@@ -629,10 +603,6 @@ public class VentanaSimulacion extends JFrame {
         JOptionPane.showMessageDialog(this, resumen.toString(),
                 "Resultado de la carrera", JOptionPane.INFORMATION_MESSAGE);
     }
-
-    // =====================================================================
-    //  UTILIDADES
-    // =====================================================================
 
     private Color colorDeEvento(String evento) {
         if (evento.startsWith("ABANDONO:")) {
@@ -679,7 +649,8 @@ public class VentanaSimulacion extends JFrame {
         if (!habilitado) {
             carreraPausada = false;
             multiplicadorVelocidad = 1;
-            btnPausa.setText("⏸ Pausa");
+            btnPausa.setText(" Pausa");
+            btnPausa.setIcon(TemaF1.icono("pause"));
         }
     }
 
@@ -703,12 +674,7 @@ public class VentanaSimulacion extends JFrame {
         }).start();
     }
 
-    // =====================================================================
-    //  RENDERER DE LA TABLA
-    // =====================================================================
-
     private class RendererRanking extends DefaultTableCellRenderer {
-
         @Override
         public Component getTableCellRendererComponent(JTable tabla, Object valor,
                 boolean seleccion, boolean tieneFoco, int fila, int columna) {
@@ -742,5 +708,4 @@ public class VentanaSimulacion extends JFrame {
             return celda;
         }
     }
-
 }

@@ -32,7 +32,35 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.5.4</version>
+            <version>3.7.2</version>
+        </dependency>
+
+        <!-- Extras de FlatLaf: iconos SVG, UI inspector, etc. -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-extras</artifactId>
+            <version>3.7.2</version>
+        </dependency>
+
+        <!-- Pack de temas IntelliJ para FlatLaf -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-intellij-themes</artifactId>
+            <version>3.7.2</version>
+        </dependency>
+
+        <!-- Layout manager profesional para Swing -->
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-swing</artifactId>
+            <version>11.4.3</version>
+        </dependency>
+
+        <!-- Librería de gráficas para estadísticas de carreras -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.6</version>
         </dependency>
 
         <!-- Librería de pruebas unitarias -->

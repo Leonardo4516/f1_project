@@ -8,16 +8,31 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+
+// Replaced MigLayout usage to avoid dependency on net.miginfocom.layout.LC (missing class at compile time)
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 /**
- * Utilidad visual (infraestructura) con el tema gráfico estilo Fórmula 1:
- * paleta oscura, rojo distintivo de la F1 y colores oficiales de las
- * escuderías. Centraliza colores y estilos para todas las ventanas.
+ * Utilidad visual (infraestructura) con el tema gráfico estilo Fórmula 1.
+ * Paleta oscura, rojo distintivo y colores oficiales de escuderías.
+ * Centraliza colores, estilos, iconos SVG y utilidades de gráficas.
  */
 public final class TemaF1 {
 
@@ -29,7 +44,6 @@ public final class TemaF1 {
     public static final Color BORDE = new Color(0x333333);
     public static final Color ASFALTO = new Color(0x2A2A2A);
 
-    // Colores oficiales de las escuderías (hexadecimal real de cada equipo).
     private static final Map<String, Color> COLORES_EQUIPOS = new HashMap<>();
 
     static {
@@ -51,15 +65,9 @@ public final class TemaF1 {
     }
 
     private TemaF1() {
-        // Clase estática, no se instancia.
     }
 
-    /**
-     * Instala el tema oscuro de FlatLaf y adapta los colores de los
-     * componentes estándar al estilo de la aplicación.
-     */
     public static void aplicarTema() {
-
         FlatDarkLaf.setup();
 
         UIManager.put("Panel.background", FONDO);
@@ -76,100 +84,125 @@ public final class TemaF1 {
         UIManager.put("OptionPane.messageForeground", TEXTO);
         UIManager.put("List.background", PANEL);
         UIManager.put("List.foreground", TEXTO);
-
+        UIManager.put("TextField.background", ASFALTO);
+        UIManager.put("TextField.foreground", TEXTO);
+        UIManager.put("TextField.caretForeground", TEXTO);
+        UIManager.put("ComboBox.background", ASFALTO);
+        UIManager.put("ComboBox.foreground", TEXTO);
+        UIManager.put("Button.background", ROJO_F1);
+        UIManager.put("Button.foreground", Color.WHITE);
+        UIManager.put("Button.hoverBackground", new Color(0xC00500));
+        UIManager.put("Button.pressedBackground", new Color(0xA00400));
     }
 
-    /**
-     * Devuelve el color oficial de una escudería. Si la escudería no está
-     * en el catálogo, genera un color estable a partir de su nombre para
-     * que cada equipo siempre se vea identificable.
-     */
     public static Color colorDeEscuderia(String escuderia) {
-
         Color oficial = COLORES_EQUIPOS.get(escuderia);
-
         if (oficial != null) {
-
             return oficial;
-
         }
-
-        // Color determinista: mismo nombre -> mismo color en cada ejecución.
         float matiz = Math.abs(escuderia.hashCode() % 360) / 360f;
-
         return Color.getHSBColor(matiz, 0.65f, 0.85f);
-
     }
 
-    /** Devuelve el color oficial de la escudería de un vehículo si se conoce. */
     public static Color colorDeEscuderia(com.proyectof1.dominio.Vehiculo vehiculo) {
-
         return colorDeEscuderia(vehiculo.getMarcaEscuderia());
-
     }
 
-    /** Estiliza un botón: texto en negrita, sin foco dibujado y con relleno. */
     public static void estilizarBoton(JButton boton) {
-
-        boton.setFont(boton.getFont().deriveFont(Font.BOLD, 14f));
+        boton.setFont(boton.getFont().deriveFont(Font.BOLD, 13f));
         boton.setFocusPainted(false);
-        boton.setBorder(new EmptyBorder(8, 18, 8, 18));
-
     }
 
-    /** Crea una etiqueta de título con el color rojo de la F1. */
     public static JLabel titulo(String texto) {
-
         JLabel etiqueta = new JLabel(texto);
         etiqueta.setFont(etiqueta.getFont().deriveFont(Font.BOLD, 22f));
         etiqueta.setForeground(ROJO_F1);
-
         return etiqueta;
-
     }
 
-    /** Crea una etiqueta de subtítulo con el color secundario. */
     public static JLabel subtitulo(String texto) {
-
         JLabel etiqueta = new JLabel(texto);
         etiqueta.setFont(etiqueta.getFont().deriveFont(12f));
         etiqueta.setForeground(TEXTO_SECUNDARIO);
-
         return etiqueta;
-
     }
 
-    /** Crea una etiqueta estándar de formulario con el color secundario. */
     public static JLabel etiqueta(String texto) {
-
         JLabel etiqueta = new JLabel(texto);
         etiqueta.setForeground(TEXTO_SECUNDARIO);
-
         return etiqueta;
-
     }
 
-    /** Devuelve un borde con relleno generoso (márgenes estéticos). */
     public static javax.swing.border.Border margenes(int arriba, int abajo, int izq, int der) {
-
         return new EmptyBorder(arriba, izq, abajo, der);
-
     }
 
-    /** Devuelve un borde con relleno uniforme. */
     public static javax.swing.border.Border margenes(int m) {
-
         return margenes(m, m, m, m);
-
     }
 
-    /** Aplica un borde delgado con el color de separación del tema. */
     public static void conBorde(javax.swing.JComponent componente) {
-
         componente.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(BORDE, 1),
                 margenes(12)));
-
     }
 
+    /** Crea un icono SVG desde la carpeta de recursos icons/. */
+    public static FlatSVGIcon icono(String nombre) {
+        return new FlatSVGIcon("icons/" + nombre + ".svg", 1.0f);
+    }
+
+    /** Crea un icono SVG pequeño (para botones de tabla, etc.). */
+    public static FlatSVGIcon iconoPequeno(String nombre) {
+        return new FlatSVGIcon("icons/" + nombre + ".svg", 1.0f);
+    }
+
+    /** Crea una gráfica XY de velocidad vs tiempo con estilo oscuro F1. */
+    public static JFreeChart crearGraficaVelocidad(String tituloGrafica, XYSeriesCollection dataset) {
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                tituloGrafica,
+                "Tiempo (s)",
+                "Velocidad (km/h)",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false);
+
+        chart.setBackgroundPaint(FONDO);
+        chart.getTitle().setPaint(TEXTO);
+        chart.getTitle().setFont(chart.getTitle().getFont().deriveFont(Font.BOLD, 14f));
+
+        XYPlot plot = chart.getXYPlot();
+        plot.setBackgroundPaint(PANEL);
+        plot.setDomainGridlinePaint(BORDE);
+        plot.setRangeGridlinePaint(BORDE);
+        plot.getDomainAxis().setTickLabelPaint(TEXTO_SECUNDARIO);
+        plot.getDomainAxis().setLabelPaint(TEXTO);
+        plot.getRangeAxis().setTickLabelPaint(TEXTO_SECUNDARIO);
+        plot.getRangeAxis().setLabelPaint(TEXTO);
+        plot.setOutlinePaint(BORDE);
+
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setSeriesPaint(0, ROJO_F1);
+        renderer.setSeriesStroke(0, new java.awt.BasicStroke(2.5f));
+
+        chart.getLegend().setItemPaint(TEXTO);
+        chart.getLegend().setBackgroundPaint(FONDO);
+
+        return chart;
+    }
+
+    /** Crea un panel con GridBagLayout (alternativa a MigLayout) con estilo oscuro para formularios. */
+    public static JPanel panelFormulario() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(FONDO);
+        // Default constraints for form rows: label on left, field(s) on right
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 8, 4, 8);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.0; // label
+        // Note: caller should provide components and use these constraints as a template.
+        return panel;
+    }
 }

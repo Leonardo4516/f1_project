@@ -18,37 +18,25 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.puertos.salida.RankingRepositorio;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 
-/**
- * Ventana principal del programa (adaptador de entrada en Swing).
- * Actúa como menú de navegación con estética moderna estilo Fórmula 1:
- * cabecera de marca con acento rojo y tarjetas de menú con barra de color
- * por módulo, hover y cursor de mano. Ofrece botones para abrir las ventanas
- * de gestión de circuitos, pilotos, vehículos y la simulación de carreras.
- */
 public class VentanaPrincipal extends JFrame {
 
-    // Colores de acento por módulo (se reutiliza la paleta del tema F1).
     private static final Color ACENTO_CIRCUITOS = new Color(0x3671C6);
     private static final Color ACENTO_PILOTOS = new Color(0x52E252);
     private static final Color ACENTO_VEHICULOS = new Color(0xFF8000);
 
-    // Servicios inyectados desde Main para compartirlos con las demás ventanas.
     private final CircuitoServicio circuitoServicio;
     private final PilotoServicio pilotoServicio;
     private final VehiculoServicio vehiculoServicio;
     private final SimulacionService simulacionService;
     private final RankingRepositorio rankingRepositorio;
 
-    /**
-     * Constructor de la ventana principal. Recibe los servicios ya construidos.
-     * Se valida que ninguno sea nulo.
-     */
     public VentanaPrincipal(CircuitoServicio circuitoServicio, PilotoServicio pilotoServicio,
             VehiculoServicio vehiculoServicio, SimulacionService simulacionService,
             RankingRepositorio rankingRepositorio) {
@@ -59,27 +47,24 @@ public class VentanaPrincipal extends JFrame {
         this.simulacionService = Objects.requireNonNull(simulacionService, "Los servicios no pueden ser nulos.");
         this.rankingRepositorio = Objects.requireNonNull(rankingRepositorio, "El ranking no puede ser nulo.");
 
-        // Configuración básica de la ventana (dashboard fijo).
         setTitle("Simulación de Fórmula 1");
         setSize(520, 620);
         setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Cierra la aplicación entera.
-        setLocationRelativeTo(null);                     // Centra la ventana.
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // ----- Cabecera con la marca del programa. -----
         add(construirCabecera(), BorderLayout.NORTH);
 
-        // ----- Menú central con las tarjetas de navegación. -----
         JPanel menu = new JPanel();
         menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
         menu.setBorder(TemaF1.margenes(12, 24, 60, 60));
 
-        JButton btnCircuitos = nuevoBotonMenu("Circuitos", "Administra pistas y trazados", ACENTO_CIRCUITOS);
-        JButton btnPilotos = nuevoBotonMenu("Pilotos", "Gestiona tu alineación", ACENTO_PILOTOS);
-        JButton btnVehiculos = nuevoBotonMenu("Vehículos", "Configura tus escuderías", ACENTO_VEHICULOS);
-        JButton btnSimulacion = nuevoBotonMenu("Simulación", "Vive la carrera en tiempo real", TemaF1.ROJO_F1);
-        JButton btnArcade = nuevoBotonMenu("Juego Arcade", "Conduce y esquiva en modo arcade", new Color(0x00E5FF));
+        JButton btnCircuitos = nuevoBotonMenu("Circuitos", "Administra pistas y trazados", ACENTO_CIRCUITOS, "circuits");
+        JButton btnPilotos = nuevoBotonMenu("Pilotos", "Gestiona tu alineación", ACENTO_PILOTOS, "drivers");
+        JButton btnVehiculos = nuevoBotonMenu("Vehículos", "Configura tus escuderías", ACENTO_VEHICULOS, "car");
+        JButton btnSimulacion = nuevoBotonMenu("Simulación", "Vive la carrera en tiempo real", TemaF1.ROJO_F1, "flag");
+        JButton btnArcade = nuevoBotonMenu("Juego Arcade", "Conduce y esquiva en modo arcade", new Color(0x00E5FF), "gamepad");
 
         menu.add(btnCircuitos);
         menu.add(Box.createVerticalStrut(14));
@@ -92,7 +77,6 @@ public class VentanaPrincipal extends JFrame {
         menu.add(btnArcade);
         add(menu, BorderLayout.CENTER);
 
-        // Cada botón abre su ventana encima del menú principal.
         btnCircuitos.addActionListener(e -> {
             VentanaCircuitos v = new VentanaCircuitos(circuitoServicio);
             v.setLocationRelativeTo(this);
@@ -123,12 +107,9 @@ public class VentanaPrincipal extends JFrame {
             v.setVisible(true);
             v.toFront();
         });
-
     }
 
-    /** Construye la cabecera: título grande, subtítulo y barra de acento roja. */
     private JPanel construirCabecera() {
-
         JPanel cabecera = new JPanel();
         cabecera.setLayout(new BoxLayout(cabecera, BoxLayout.Y_AXIS));
         cabecera.setBorder(TemaF1.margenes(28, 6, 24, 24));
@@ -141,7 +122,6 @@ public class VentanaPrincipal extends JFrame {
         JLabel subtitulo = TemaF1.subtitulo("Gestiona tu equipo y compite en carreras reales");
         subtitulo.setAlignmentX(CENTER_ALIGNMENT);
 
-        // Barrita roja central como acento visual de la marca.
         JPanel barraAcento = new JPanel();
         barraAcento.setPreferredSize(new Dimension(72, 4));
         barraAcento.setMaximumSize(new Dimension(72, 4));
@@ -157,37 +137,26 @@ public class VentanaPrincipal extends JFrame {
         return cabecera;
     }
 
-    /**
-     * Crea una tarjeta de menú grande, con texto principal y descripción,
-     * barra de acento de color en el borde izquierdo y efectos al pasar el
-     * ratón por encima.
-     */
-    private JButton nuevoBotonMenu(String nombre, String descripcion, Color acento) {
-
-        JButton boton = new BotonMenu(nombre, descripcion, acento);
+    private JButton nuevoBotonMenu(String nombre, String descripcion, Color acento, String iconoNombre) {
+        JButton boton = new BotonMenu(nombre, descripcion, acento, iconoNombre);
         boton.setAlignmentX(CENTER_ALIGNMENT);
         boton.setMinimumSize(new Dimension(380, 68));
         boton.setMaximumSize(new Dimension(380, 68));
         boton.setPreferredSize(new Dimension(380, 68));
-
         return boton;
     }
 
-    /**
-     * Botón con apariencia de tarjeta: fondo oscuro con borde de acento a la
-     * izquierda, texto en negrita con descripción en gris y colores que cambian
-     * al pasar el cursor o pulsar.
-     */
     private class BotonMenu extends JButton {
 
-        // Fondos de los distintos estados del botón.
         private static final Color HOVER = new Color(0x2A2A2A);
         private static final Color PRESIONADO = new Color(0x232323);
 
-        BotonMenu(String nombre, String descripcion, Color acento) {
-
+        BotonMenu(String nombre, String descripcion, Color acento, String iconoNombre) {
             super("<html><b style='font-size:14px'>" + nombre.toUpperCase()
                     + "</b><br><font color='#9A9A9A' size='2'>" + descripcion + "</font></html>");
+
+            FlatSVGIcon icono = TemaF1.icono(iconoNombre);
+            setIcon(icono);
 
             setHorizontalAlignment(LEFT);
             setVerticalAlignment(CENTER);
@@ -198,14 +167,11 @@ public class VentanaPrincipal extends JFrame {
             setBackground(TemaF1.PANEL);
             setOpaque(true);
 
-            // Acento de color a la izquierda + relleno interior cómodo.
             Border acentoIzquierdo = BorderFactory.createMatteBorder(0, 6, 0, 0, acento);
             Border relleno = TemaF1.margenes(16, 18, 18, 16);
             setBorder(BorderFactory.createCompoundBorder(acentoIzquierdo, relleno));
 
-            // Estados visuales: hover al pasar, más oscuro al pulsar.
             addMouseListener(new MouseAdapter() {
-
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     setBackground(HOVER);
@@ -228,5 +194,4 @@ public class VentanaPrincipal extends JFrame {
             });
         }
     }
-
 }
