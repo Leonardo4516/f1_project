@@ -120,21 +120,6 @@ public class VentanaPilotos extends JFrame {
         JTextField txtExperiencia = new JTextField();
         JTextField txtHabilidadLluvia = new JTextField();
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill",
-                "[right]rel[grow,fill]",
-                "[]10[]10[]"));
-        panel.setBackground(TemaF1.FONDO);
-
-        panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre, "wmin 200");
-
-        panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
-        panel.add(txtExperiencia, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
-        panel.add(txtHabilidadLluvia, "wmin 100");
-
         JButton btnAceptar = new JButton(TemaF1.icono("add"));
         btnAceptar.setText(" Registrar");
         TemaF1.estilizarBoton(btnAceptar);
@@ -142,17 +127,25 @@ public class VentanaPilotos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel botones = new JPanel(new MigLayout("insets 0, gap 10", "[grow][][]", "[]"));
-        botones.setBackground(TemaF1.FONDO);
-        botones.add(btnAceptar, "w 140!");
-        botones.add(btnCancelar, "w 120!");
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill, flowy",
+                "[right]rel[grow,fill]",
+                "[][][]20[]"));
+        panel.setBackground(TemaF1.FONDO);
 
-        JPanel contenido = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
-        contenido.setBackground(TemaF1.FONDO);
-        contenido.add(panel, "growx");
-        contenido.add(botones, "growx, right");
+        panel.add(TemaF1.etiqueta("Nombre:"));
+        panel.add(txtNombre, "growx");
 
-        dialogo.setContentPane(contenido);
+        panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
+        panel.add(txtExperiencia, "growx");
+
+        panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
+        panel.add(txtHabilidadLluvia, "growx");
+
+        panel.add(btnAceptar, "w 140!");
+        panel.add(btnCancelar, "w 120!");
+
+        dialogo.setContentPane(panel);
         dialogo.setSize(400, 280);
         dialogo.setLocationRelativeTo(this);
 

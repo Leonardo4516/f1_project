@@ -132,33 +132,6 @@ public class VentanaCircuitos extends JFrame {
         JTextField txtVueltas = new JTextField();
         JTextField txtRecord = new JTextField();
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill",
-                "[right]rel[grow,fill]",
-                "[]10[]10[]10[]10[]10[]10[]"));
-        panel.setBackground(TemaF1.FONDO);
-
-        panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre, "wmin 200");
-
-        panel.add(TemaF1.etiqueta("Kilómetros:"));
-        panel.add(txtKilometros, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Ubicación:"));
-        panel.add(txtUbicacion, "wmin 200");
-
-        panel.add(TemaF1.etiqueta("Nº Curvas:"));
-        panel.add(txtNumCurvas, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Tipo:"));
-        panel.add(comboTipo, "wmin 200");
-
-        panel.add(TemaF1.etiqueta("Vueltas típicas:"));
-        panel.add(txtVueltas, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Récord de vuelta:"));
-        panel.add(txtRecord, "wmin 200");
-
         JButton btnAceptar = new JButton(TemaF1.icono("add"));
         btnAceptar.setText(" Registrar");
         TemaF1.estilizarBoton(btnAceptar);
@@ -166,18 +139,38 @@ public class VentanaCircuitos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel botones = new JPanel(new MigLayout("insets 0, gap 10", "[grow][][]", "[]"));
-        botones.setBackground(TemaF1.FONDO);
-        botones.add(btnAceptar, "w 140!");
-        botones.add(btnCancelar, "w 120!");
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill, flowy",
+                "[right]rel[grow,fill]",
+                "[][][][][][][]20[]"));
+        panel.setBackground(TemaF1.FONDO);
 
-        JPanel contenido = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
-        contenido.setBackground(TemaF1.FONDO);
-        contenido.add(panel, "growx");
-        contenido.add(botones, "growx, right");
+        panel.add(TemaF1.etiqueta("Nombre:"));
+        panel.add(txtNombre, "growx");
 
-        dialogo.setContentPane(contenido);
-        dialogo.setSize(450, 420);
+        panel.add(TemaF1.etiqueta("Kilómetros:"));
+        panel.add(txtKilometros, "growx");
+
+        panel.add(TemaF1.etiqueta("Ubicación:"));
+        panel.add(txtUbicacion, "growx");
+
+        panel.add(TemaF1.etiqueta("Nº Curvas:"));
+        panel.add(txtNumCurvas, "growx");
+
+        panel.add(TemaF1.etiqueta("Tipo:"));
+        panel.add(comboTipo, "growx");
+
+        panel.add(TemaF1.etiqueta("Vueltas típicas:"));
+        panel.add(txtVueltas, "growx");
+
+        panel.add(TemaF1.etiqueta("Récord de vuelta:"));
+        panel.add(txtRecord, "growx");
+
+        panel.add(btnAceptar, "w 140!");
+        panel.add(btnCancelar, "w 120!");
+
+        dialogo.setContentPane(panel);
+        dialogo.setSize(450, 460);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

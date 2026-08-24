@@ -143,30 +143,6 @@ public class VentanaVehiculos extends JFrame {
         }
         JComboBox<String> comboPilotos = new JComboBox<>(modeloPilotos);
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill",
-                "[right]rel[grow,fill]",
-                "[]10[]10[]10[]10[]10[]"));
-        panel.setBackground(TemaF1.FONDO);
-
-        panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtMarcaEscuderia, "wmin 200");
-
-        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
-        panel.add(txtVelocidadMaxima, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
-        panel.add(txtAceleracion, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
-        panel.add(txtFrenado, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
-        panel.add(txtAgarre, "wmin 100");
-
-        panel.add(TemaF1.etiqueta("Piloto:"));
-        panel.add(comboPilotos, "wmin 200");
-
         JButton btnAceptar = new JButton(TemaF1.icono("add"));
         btnAceptar.setText(" Registrar");
         TemaF1.estilizarBoton(btnAceptar);
@@ -174,18 +150,35 @@ public class VentanaVehiculos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel botones = new JPanel(new MigLayout("insets 0, gap 10", "[grow][][]", "[]"));
-        botones.setBackground(TemaF1.FONDO);
-        botones.add(btnAceptar, "w 140!");
-        botones.add(btnCancelar, "w 120!");
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill, flowy",
+                "[right]rel[grow,fill]",
+                "[][][][][][]20[]"));
+        panel.setBackground(TemaF1.FONDO);
 
-        JPanel contenido = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
-        contenido.setBackground(TemaF1.FONDO);
-        contenido.add(panel, "growx");
-        contenido.add(botones, "growx, right");
+        panel.add(TemaF1.etiqueta("Escudería:"));
+        panel.add(txtMarcaEscuderia, "growx");
 
-        dialogo.setContentPane(contenido);
-        dialogo.setSize(420, 380);
+        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
+        panel.add(txtVelocidadMaxima, "growx");
+
+        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
+        panel.add(txtAceleracion, "growx");
+
+        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
+        panel.add(txtFrenado, "growx");
+
+        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
+        panel.add(txtAgarre, "growx");
+
+        panel.add(TemaF1.etiqueta("Piloto:"));
+        panel.add(comboPilotos, "growx");
+
+        panel.add(btnAceptar, "w 140!");
+        panel.add(btnCancelar, "w 120!");
+
+        dialogo.setContentPane(panel);
+        dialogo.setSize(420, 400);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
