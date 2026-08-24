@@ -158,8 +158,7 @@ public final class TemaF1 {
     }
 
     /** Crea una gráfica XY de velocidad vs tiempo con estilo oscuro F1. */
-    public static JFreeChart crearGraficaVelocidad(String tituloGrafica) {
-        XYSeriesCollection dataset = new XYSeriesCollection();
+    public static JFreeChart crearGraficaVelocidad(String tituloGrafica, XYSeriesCollection dataset) {
         JFreeChart chart = ChartFactory.createXYLineChart(
                 tituloGrafica,
                 "Tiempo (s)",

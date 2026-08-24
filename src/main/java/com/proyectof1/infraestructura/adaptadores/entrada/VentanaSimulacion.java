@@ -338,7 +338,7 @@ public class VentanaSimulacion extends JFrame {
 
     private JPanel construirPanelGrafica() {
         graficaDataset = new XYSeriesCollection();
-        graficaVelocidad = TemaF1.crearGraficaVelocidad("Velocidad en vivo");
+        graficaVelocidad = TemaF1.crearGraficaVelocidad("Velocidad en vivo", graficaDataset);
 
         ChartPanel chartPanel = new ChartPanel(graficaVelocidad);
         chartPanel.setPreferredSize(new Dimension(400, 180));
