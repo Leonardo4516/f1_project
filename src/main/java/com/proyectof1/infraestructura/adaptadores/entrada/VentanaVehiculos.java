@@ -5,11 +5,12 @@ import java.awt.Component;
 import java.awt.Font;
 import java.util.Objects;
 
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -32,14 +33,6 @@ public class VentanaVehiculos extends JFrame {
 
     private DefaultTableModel modelo;
     private JTable tabla;
-    private DefaultComboBoxModel<String> modeloPilotos;
-
-    private JTextField txtMarcaEscuderia;
-    private JTextField txtVelocidadMaxima;
-    private JTextField txtAceleracion;
-    private JTextField txtFrenado;
-    private JTextField txtAgarre;
-    private JComboBox<String> comboPilotos;
     private JTextField txtBuscar;
 
     private JButton btnRegistrar;
@@ -53,18 +46,39 @@ public class VentanaVehiculos extends JFrame {
                 "Los servicios de vehículo y piloto no pueden ser nulos.");
 
         setTitle("Administración de Vehículos");
-        setSize(780, 600);
+        setSize(700, 500);
+        setMinimumSize(new java.awt.Dimension(480, 320));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JPanel cabecera = new JPanel(new MigLayout("insets 8 16 8 16", "[grow][]", "[]"));
+        JPanel cabecera = new JPanel(new MigLayout("insets 8 16 8 16, gap 10", "[grow][]20[]", "[]"));
         cabecera.setBackground(TemaF1.FONDO);
         cabecera.add(TemaF1.titulo("Vehículos"), "growx");
+
+        btnRegistrar = new JButton(TemaF1.icono("add"));
+        btnRegistrar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnRegistrar);
+        cabecera.add(btnRegistrar, "w 140!");
+
         btnEliminar = new JButton(TemaF1.icono("delete"));
         btnEliminar.setText(" Eliminar");
         TemaF1.estilizarBoton(btnEliminar);
-        cabecera.add(btnEliminar, "w 140!, right");
+        cabecera.add(btnEliminar, "w 140!");
         add(cabecera, BorderLayout.NORTH);
+
+        JPanel barraBusqueda = new JPanel(new MigLayout("insets 4 16 4 16, gap 8", "[][grow][]", "[]"));
+        barraBusqueda.setBackground(TemaF1.FONDO);
+        txtBuscar = new JTextField();
+        btnBuscar = new JButton(TemaF1.icono("search"));
+        btnBuscar.setText(" Buscar");
+        barraBusqueda.add(TemaF1.etiqueta("Escudería:"));
+        barraBusqueda.add(txtBuscar, "growx, wmin 100");
+        barraBusqueda.add(btnBuscar, "w 120!");
+
+        JPanel sur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
+        sur.setBackground(TemaF1.FONDO);
+        sur.setBorder(TemaF1.margenes(0, 0, 8, 0));
+        sur.add(barraBusqueda, "growx");
 
         modelo = new DefaultTableModel(new String[]{"Escudería", "Vel. máx", "Acel", "Fren", "Agar", "Piloto"}, 0) {
             @Override
@@ -76,16 +90,107 @@ public class VentanaVehiculos extends JFrame {
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabla.setRowHeight(28);
         tabla.getColumnModel().getColumn(0).setCellRenderer(new RendererEscuderia());
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        sur.add(new JScrollPane(tabla), "grow");
+        add(sur, BorderLayout.CENTER);
 
-        JPanel cuerpoSur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][]"));
-        cuerpoSur.setBackground(TemaF1.FONDO);
-        cuerpoSur.setBorder(TemaF1.margenes(0, 12, 16, 16));
-        cuerpoSur.add(construirPanelBusqueda(), "growx");
-        cuerpoSur.add(construirPanelFormulario(), "growx");
-        add(cuerpoSur, BorderLayout.SOUTH);
+        btnRegistrar.addActionListener(e -> mostrarDialogoRegistro());
 
-        btnRegistrar.addActionListener(e -> {
+        btnEliminar.addActionListener(e -> {
+            int fila = tabla.getSelectedRow();
+            if (fila < 0) {
+                JOptionPane.showMessageDialog(this, "Selecciona un vehículo de la tabla.");
+                return;
+            }
+            String escuderia = (String) modelo.getValueAt(fila, 0);
+            if (vehiculoServicio.eliminar(escuderia)) {
+                actualizarTabla();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se encontró el vehículo.");
+            }
+        });
+
+        btnBuscar.addActionListener(e -> {
+            Vehiculo encontrado = vehiculoServicio.buscarPorEscuderia(txtBuscar.getText());
+            if (encontrado != null) {
+                JOptionPane.showMessageDialog(this,
+                        "Vehículo: " + encontrado.getMarcaEscuderia()
+                                + " | Vel: " + encontrado.getVelocidadMaxima()
+                                + " | Acel: " + encontrado.getAceleracion()
+                                + " | Fren: " + encontrado.getFrenado()
+                                + " | Agarre: " + encontrado.getAgarre()
+                                + " | Piloto: " + encontrado.getPiloto().getNombre());
+            } else {
+                JOptionPane.showMessageDialog(this, "Vehículo no encontrado.");
+            }
+        });
+
+        actualizarTabla();
+    }
+
+    private void mostrarDialogoRegistro() {
+        JDialog dialogo = new JDialog(this, "Registrar Vehículo", true);
+        dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JTextField txtMarcaEscuderia = new JTextField();
+        JTextField txtVelocidadMaxima = new JTextField();
+        JTextField txtAceleracion = new JTextField();
+        JTextField txtFrenado = new JTextField();
+        JTextField txtAgarre = new JTextField();
+
+        DefaultComboBoxModel<String> modeloPilotos = new DefaultComboBoxModel<>();
+        for (Piloto piloto : pilotoServicio.listarPilotos()) {
+            modeloPilotos.addElement(piloto.getNombre());
+        }
+        JComboBox<String> comboPilotos = new JComboBox<>(modeloPilotos);
+
+        JPanel panel = new JPanel(new MigLayout(
+                "insets 16, gap 10, fill",
+                "[right]rel[grow,fill]",
+                "[]10[]10[]10[]10[]10[]"));
+        panel.setBackground(TemaF1.FONDO);
+
+        panel.add(TemaF1.etiqueta("Escudería:"));
+        panel.add(txtMarcaEscuderia, "wmin 200");
+
+        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
+        panel.add(txtVelocidadMaxima, "wmin 100");
+
+        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
+        panel.add(txtAceleracion, "wmin 100");
+
+        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
+        panel.add(txtFrenado, "wmin 100");
+
+        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
+        panel.add(txtAgarre, "wmin 100");
+
+        panel.add(TemaF1.etiqueta("Piloto:"));
+        panel.add(comboPilotos, "wmin 200");
+
+        JButton btnAceptar = new JButton(TemaF1.icono("add"));
+        btnAceptar.setText(" Registrar");
+        TemaF1.estilizarBoton(btnAceptar);
+
+        JButton btnCancelar = new JButton("Cancelar");
+        TemaF1.estilizarBoton(btnCancelar);
+
+        JPanel botones = new JPanel(new MigLayout("insets 0, gap 10", "[grow][][]", "[]"));
+        botones.setBackground(TemaF1.FONDO);
+        botones.add(btnAceptar, "w 140!");
+        botones.add(btnCancelar, "w 120!");
+
+        JPanel contenido = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
+        contenido.setBackground(TemaF1.FONDO);
+        contenido.add(panel, "growx");
+        contenido.add(botones, "growx, right");
+
+        dialogo.setContentPane(contenido);
+        dialogo.setSize(420, 380);
+        dialogo.setLocationRelativeTo(this);
+
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+
+        btnAceptar.addActionListener(e -> {
             try {
                 String marcaEscuderia = txtMarcaEscuderia.getText();
                 int velocidadMaxima = Integer.parseInt(txtVelocidadMaxima.getText());
@@ -95,103 +200,21 @@ public class VentanaVehiculos extends JFrame {
                 String nombrePiloto = (String) comboPilotos.getSelectedItem();
 
                 if (nombrePiloto == null) {
-                    javax.swing.JOptionPane.showMessageDialog(this, "Registra pilotos antes de crear vehículos.");
+                    JOptionPane.showMessageDialog(dialogo, "Registra pilotos antes de crear vehículos.");
                     return;
                 }
 
                 Piloto piloto = pilotoServicio.buscarPorNombre(nombrePiloto);
                 vehiculoServicio.registrar(marcaEscuderia, velocidadMaxima, aceleracion, frenado, agarre, piloto);
                 actualizarTabla();
-                limpiarCampos();
+                dialogo.dispose();
             } catch (Exception ex) {
-                javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
-                        "Registro de vehículo", javax.swing.JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialogo, "Error: " + ex.getMessage(),
+                        "Registro de vehículo", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        btnEliminar.addActionListener(e -> {
-            int fila = tabla.getSelectedRow();
-            if (fila < 0) {
-                javax.swing.JOptionPane.showMessageDialog(this, "Selecciona un vehículo de la tabla.");
-                return;
-            }
-            String escuderia = (String) modelo.getValueAt(fila, 0);
-            if (vehiculoServicio.eliminar(escuderia)) {
-                actualizarTabla();
-            } else {
-                javax.swing.JOptionPane.showMessageDialog(this, "No se encontró el vehículo.");
-            }
-        });
-
-        btnBuscar.addActionListener(e -> {
-            Vehiculo encontrado = vehiculoServicio.buscarPorEscuderia(txtBuscar.getText());
-            if (encontrado != null) {
-                javax.swing.JOptionPane.showMessageDialog(this,
-                        "Vehículo: " + encontrado.getMarcaEscuderia()
-                                + " | Vel: " + encontrado.getVelocidadMaxima()
-                                + " | Acel: " + encontrado.getAceleracion()
-                                + " | Fren: " + encontrado.getFrenado()
-                                + " | Agarre: " + encontrado.getAgarre()
-                                + " | Piloto: " + encontrado.getPiloto().getNombre());
-            } else {
-                javax.swing.JOptionPane.showMessageDialog(this, "Vehículo no encontrado.");
-            }
-        });
-
-        actualizarTabla();
-        actualizarComboPilotos();
-    }
-
-    private JPanel construirPanelBusqueda() {
-        JPanel panel = new JPanel(new MigLayout("insets 4 0 4 0", "[][grow][]", "[]"));
-        panel.setBackground(TemaF1.FONDO);
-
-        txtBuscar = new JTextField(18);
-        btnBuscar = new JButton(TemaF1.icono("search"));
-        btnBuscar.setText(" Buscar");
-
-        panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtBuscar, "growx");
-        panel.add(btnBuscar, "w 120!");
-
-        return panel;
-    }
-
-    private JPanel construirPanelFormulario() {
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 12 8 8 8, gap 10",
-                "[right]rel[grow,fill][right]rel[grow,fill]",
-                "[]10[]10[]10[]"));
-        panel.setBackground(TemaF1.FONDO);
-
-        txtMarcaEscuderia = new JTextField();
-        txtVelocidadMaxima = new JTextField();
-        txtAceleracion = new JTextField();
-        txtFrenado = new JTextField();
-        txtAgarre = new JTextField();
-        modeloPilotos = new DefaultComboBoxModel<>();
-        comboPilotos = new JComboBox<>(modeloPilotos);
-        btnRegistrar = new JButton(TemaF1.icono("add"));
-        btnRegistrar.setText(" Registrar");
-
-        panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtMarcaEscuderia, "wmin 100");
-        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
-        panel.add(txtVelocidadMaxima, "wmin 80");
-
-        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
-        panel.add(txtAceleracion, "wmin 80");
-        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
-        panel.add(txtFrenado, "wmin 80");
-
-        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
-        panel.add(txtAgarre, "wmin 80");
-        panel.add(TemaF1.etiqueta("Piloto:"));
-        panel.add(comboPilotos, "wmin 100");
-
-        panel.add(btnRegistrar, "span 2, w 160!");
-
-        return panel;
+        dialogo.setVisible(true);
     }
 
     private void actualizarTabla() {
@@ -205,21 +228,6 @@ public class VentanaVehiculos extends JFrame {
                     vehiculo.getAgarre(),
                     vehiculo.getPiloto().getNombre()});
         }
-    }
-
-    private void actualizarComboPilotos() {
-        modeloPilotos.removeAllElements();
-        for (Piloto piloto : pilotoServicio.listarPilotos()) {
-            modeloPilotos.addElement(piloto.getNombre());
-        }
-    }
-
-    private void limpiarCampos() {
-        txtMarcaEscuderia.setText("");
-        txtVelocidadMaxima.setText("");
-        txtAceleracion.setText("");
-        txtFrenado.setText("");
-        txtAgarre.setText("");
     }
 
     private static class RendererEscuderia extends DefaultTableCellRenderer {
