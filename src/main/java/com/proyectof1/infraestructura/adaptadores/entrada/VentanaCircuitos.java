@@ -1,6 +1,9 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Objects;
 
 import javax.swing.JButton;
@@ -124,13 +127,13 @@ public class VentanaCircuitos extends JFrame {
         JDialog dialogo = new JDialog(this, "Registrar Circuito", true);
         dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JTextField txtNombre = new JTextField();
-        JTextField txtKilometros = new JTextField();
-        JTextField txtUbicacion = new JTextField();
-        JTextField txtNumCurvas = new JTextField();
+        JTextField txtNombre = new JTextField(15);
+        JTextField txtKilometros = new JTextField(5);
+        JTextField txtUbicacion = new JTextField(15);
+        JTextField txtNumCurvas = new JTextField(5);
         JComboBox<String> comboTipo = new JComboBox<>(new String[]{"Permanente", "Urbano", "Semiacotico"});
-        JTextField txtVueltas = new JTextField();
-        JTextField txtRecord = new JTextField();
+        JTextField txtVueltas = new JTextField(5);
+        JTextField txtRecord = new JTextField(15);
 
         JButton btnAceptar = new JButton(TemaF1.icono("add"));
         btnAceptar.setText(" Registrar");
@@ -139,35 +142,37 @@ public class VentanaCircuitos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 8, fill",
-                "[right]rel[grow,fill,150!][16][right]rel[grow,fill,150!]",
-                "[]8[]8[]8[]20[]"));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(TemaF1.FONDO);
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(6, 6, 6, 6);
+        c.fill = GridBagConstraints.HORIZONTAL;
 
-        panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre, "growx");
-        panel.add(TemaF1.etiqueta("Kilómetros:"));
-        panel.add(txtKilometros, "growx");
+        c.gridx = 0; c.gridy = 0; c.weightx = 0; panel.add(TemaF1.etiqueta("Nombre:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtNombre, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Kilómetros:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtKilometros, c);
 
-        panel.add(TemaF1.etiqueta("Ubicación:"));
-        panel.add(txtUbicacion, "growx");
-        panel.add(TemaF1.etiqueta("Nº Curvas:"));
-        panel.add(txtNumCurvas, "growx");
+        c.gridx = 0; c.gridy = 1; c.weightx = 0; panel.add(TemaF1.etiqueta("Ubicación:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtUbicacion, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Nº Curvas:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtNumCurvas, c);
 
-        panel.add(TemaF1.etiqueta("Tipo:"));
-        panel.add(comboTipo, "growx");
-        panel.add(TemaF1.etiqueta("Vueltas típicas:"));
-        panel.add(txtVueltas, "growx");
+        c.gridx = 0; c.gridy = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Tipo:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(comboTipo, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Vueltas típicas:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtVueltas, c);
 
-        panel.add(TemaF1.etiqueta("Récord:"));
-        panel.add(txtRecord, "growx, span 2");
+        c.gridx = 0; c.gridy = 3; c.weightx = 0; panel.add(TemaF1.etiqueta("Récord:"), c);
+        c.gridx = 1; c.gridy = 3; c.weightx = 1; c.gridwidth = 3;
+        panel.add(txtRecord, c);
+        c.gridwidth = 1;
 
-        panel.add(btnAceptar, "w 140!");
-        panel.add(btnCancelar, "w 120!");
+        c.gridx = 0; c.gridy = 4; c.weightx = 1; panel.add(btnAceptar, c);
+        c.gridx = 3; c.weightx = 0; panel.add(btnCancelar, c);
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(550, 320);
+        dialogo.setSize(560, 300);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

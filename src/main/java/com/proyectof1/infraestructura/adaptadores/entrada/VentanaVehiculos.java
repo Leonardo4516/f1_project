@@ -3,6 +3,9 @@ package com.proyectof1.infraestructura.adaptadores.entrada;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Objects;
 
 import javax.swing.DefaultComboBoxModel;
@@ -131,11 +134,11 @@ public class VentanaVehiculos extends JFrame {
         JDialog dialogo = new JDialog(this, "Registrar Vehículo", true);
         dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JTextField txtMarcaEscuderia = new JTextField();
-        JTextField txtVelocidadMaxima = new JTextField();
-        JTextField txtAceleracion = new JTextField();
-        JTextField txtFrenado = new JTextField();
-        JTextField txtAgarre = new JTextField();
+        JTextField txtMarcaEscuderia = new JTextField(15);
+        JTextField txtVelocidadMaxima = new JTextField(5);
+        JTextField txtAceleracion = new JTextField(5);
+        JTextField txtFrenado = new JTextField(5);
+        JTextField txtAgarre = new JTextField(5);
 
         DefaultComboBoxModel<String> modeloPilotos = new DefaultComboBoxModel<>();
         for (Piloto piloto : pilotoServicio.listarPilotos()) {
@@ -150,32 +153,32 @@ public class VentanaVehiculos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 8, fill",
-                "[right]rel[grow,fill,150!][16][right]rel[grow,fill,150!]",
-                "[]8[]8[]8[]20[]"));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(TemaF1.FONDO);
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(6, 6, 6, 6);
+        c.fill = GridBagConstraints.HORIZONTAL;
 
-        panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtMarcaEscuderia, "growx");
-        panel.add(TemaF1.etiqueta("Velocidad máx:"));
-        panel.add(txtVelocidadMaxima, "growx");
+        c.gridx = 0; c.gridy = 0; c.weightx = 0; panel.add(TemaF1.etiqueta("Escudería:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtMarcaEscuderia, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Velocidad máx:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtVelocidadMaxima, c);
 
-        panel.add(TemaF1.etiqueta("Aceleración:"));
-        panel.add(txtAceleracion, "growx");
-        panel.add(TemaF1.etiqueta("Frenado:"));
-        panel.add(txtFrenado, "growx");
+        c.gridx = 0; c.gridy = 1; c.weightx = 0; panel.add(TemaF1.etiqueta("Aceleración:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtAceleracion, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Frenado:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtFrenado, c);
 
-        panel.add(TemaF1.etiqueta("Agarre:"));
-        panel.add(txtAgarre, "growx");
-        panel.add(TemaF1.etiqueta("Piloto:"));
-        panel.add(comboPilotos, "growx");
+        c.gridx = 0; c.gridy = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Agarre:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtAgarre, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Piloto:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(comboPilotos, c);
 
-        panel.add(btnAceptar, "w 140!");
-        panel.add(btnCancelar, "w 120!");
+        c.gridx = 0; c.gridy = 3; c.weightx = 1; panel.add(btnAceptar, c);
+        c.gridx = 3; c.weightx = 0; panel.add(btnCancelar, c);
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(550, 300);
+        dialogo.setSize(560, 250);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

@@ -1,6 +1,9 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Objects;
 
 import javax.swing.JButton;
@@ -116,9 +119,9 @@ public class VentanaPilotos extends JFrame {
         JDialog dialogo = new JDialog(this, "Registrar Piloto", true);
         dialogo.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JTextField txtNombre = new JTextField();
-        JTextField txtExperiencia = new JTextField();
-        JTextField txtHabilidadLluvia = new JTextField();
+        JTextField txtNombre = new JTextField(15);
+        JTextField txtExperiencia = new JTextField(5);
+        JTextField txtHabilidadLluvia = new JTextField(5);
 
         JButton btnAceptar = new JButton(TemaF1.icono("add"));
         btnAceptar.setText(" Registrar");
@@ -127,26 +130,27 @@ public class VentanaPilotos extends JFrame {
         JButton btnCancelar = new JButton("Cancelar");
         TemaF1.estilizarBoton(btnCancelar);
 
-        JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill, flowy",
-                "[right]rel[grow,fill]",
-                "[][][]20[]"));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(TemaF1.FONDO);
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(6, 6, 6, 6);
+        c.fill = GridBagConstraints.HORIZONTAL;
 
-        panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre, "growx");
+        c.gridx = 0; c.gridy = 0; c.weightx = 0; panel.add(TemaF1.etiqueta("Nombre:"), c);
+        c.gridx = 1; c.weightx = 1; panel.add(txtNombre, c);
+        c.gridx = 2; c.weightx = 0; panel.add(TemaF1.etiqueta("Experiencia:"), c);
+        c.gridx = 3; c.weightx = 1; panel.add(txtExperiencia, c);
 
-        panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
-        panel.add(txtExperiencia, "growx");
+        c.gridx = 0; c.gridy = 1; c.weightx = 0; panel.add(TemaF1.etiqueta("Habilidad lluvia:"), c);
+        c.gridx = 1; c.gridy = 1; c.weightx = 1; c.gridwidth = 3;
+        panel.add(txtHabilidadLluvia, c);
+        c.gridwidth = 1;
 
-        panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
-        panel.add(txtHabilidadLluvia, "growx");
-
-        panel.add(btnAceptar, "w 140!");
-        panel.add(btnCancelar, "w 120!");
+        c.gridx = 0; c.gridy = 2; c.weightx = 1; panel.add(btnAceptar, c);
+        c.gridx = 3; c.weightx = 0; panel.add(btnCancelar, c);
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(400, 280);
+        dialogo.setSize(500, 200);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
