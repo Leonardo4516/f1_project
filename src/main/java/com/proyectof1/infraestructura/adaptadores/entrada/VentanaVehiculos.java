@@ -151,26 +151,23 @@ public class VentanaVehiculos extends JFrame {
         TemaF1.estilizarBoton(btnCancelar);
 
         JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill, flowy",
-                "[right]rel[grow,fill]",
-                "[][][][][][]20[]"));
+                "insets 16, gap 8, fill",
+                "[right]rel[grow,fill,150!][16][right]rel[grow,fill,150!]",
+                "[]8[]8[]8[]20[]"));
         panel.setBackground(TemaF1.FONDO);
 
         panel.add(TemaF1.etiqueta("Escudería:"));
         panel.add(txtMarcaEscuderia, "growx");
-
-        panel.add(TemaF1.etiqueta("Velocidad máxima:"));
+        panel.add(TemaF1.etiqueta("Velocidad máx:"));
         panel.add(txtVelocidadMaxima, "growx");
 
-        panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
+        panel.add(TemaF1.etiqueta("Aceleración:"));
         panel.add(txtAceleracion, "growx");
-
-        panel.add(TemaF1.etiqueta("Frenado (1-100):"));
+        panel.add(TemaF1.etiqueta("Frenado:"));
         panel.add(txtFrenado, "growx");
 
-        panel.add(TemaF1.etiqueta("Agarre (1-100):"));
+        panel.add(TemaF1.etiqueta("Agarre:"));
         panel.add(txtAgarre, "growx");
-
         panel.add(TemaF1.etiqueta("Piloto:"));
         panel.add(comboPilotos, "growx");
 
@@ -178,7 +175,7 @@ public class VentanaVehiculos extends JFrame {
         panel.add(btnCancelar, "w 120!");
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(450, 490);
+        dialogo.setSize(550, 300);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

@@ -140,37 +140,34 @@ public class VentanaCircuitos extends JFrame {
         TemaF1.estilizarBoton(btnCancelar);
 
         JPanel panel = new JPanel(new MigLayout(
-                "insets 16, gap 10, fill, flowy",
-                "[right]rel[grow,fill]",
-                "[][][][][][][]20[]"));
+                "insets 16, gap 8, fill",
+                "[right]rel[grow,fill,150!][16][right]rel[grow,fill,150!]",
+                "[]8[]8[]8[]20[]"));
         panel.setBackground(TemaF1.FONDO);
 
         panel.add(TemaF1.etiqueta("Nombre:"));
         panel.add(txtNombre, "growx");
-
         panel.add(TemaF1.etiqueta("Kilómetros:"));
         panel.add(txtKilometros, "growx");
 
         panel.add(TemaF1.etiqueta("Ubicación:"));
         panel.add(txtUbicacion, "growx");
-
         panel.add(TemaF1.etiqueta("Nº Curvas:"));
         panel.add(txtNumCurvas, "growx");
 
         panel.add(TemaF1.etiqueta("Tipo:"));
         panel.add(comboTipo, "growx");
-
         panel.add(TemaF1.etiqueta("Vueltas típicas:"));
         panel.add(txtVueltas, "growx");
 
-        panel.add(TemaF1.etiqueta("Récord de vuelta:"));
-        panel.add(txtRecord, "growx");
+        panel.add(TemaF1.etiqueta("Récord:"));
+        panel.add(txtRecord, "growx, span 2");
 
         panel.add(btnAceptar, "w 140!");
         panel.add(btnCancelar, "w 120!");
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(480, 530);
+        dialogo.setSize(550, 320);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
