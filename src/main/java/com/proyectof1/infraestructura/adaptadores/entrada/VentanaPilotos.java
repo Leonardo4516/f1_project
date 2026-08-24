@@ -62,11 +62,11 @@ public class VentanaPilotos extends JFrame {
         tabla.setRowHeight(28);
         add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        JPanel cuerpoSur = new JPanel();
-        cuerpoSur.setLayout(new BoxLayout(cuerpoSur, BoxLayout.Y_AXIS));
-        cuerpoSur.setBorder(TemaF1.margenes(8, 12, 16, 16));
-        cuerpoSur.add(construirPanelBusqueda());
-        cuerpoSur.add(construirPanelFormulario());
+        JPanel cuerpoSur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][]"));
+        cuerpoSur.setBackground(TemaF1.FONDO);
+        cuerpoSur.setBorder(TemaF1.margenes(0, 12, 16, 16));
+        cuerpoSur.add(construirPanelBusqueda(), "growx");
+        cuerpoSur.add(construirPanelFormulario(), "growx");
         add(cuerpoSur, BorderLayout.SOUTH);
 
         btnRegistrar.addActionListener(e -> {
@@ -130,23 +130,23 @@ public class VentanaPilotos extends JFrame {
     private JPanel construirPanelFormulario() {
         JPanel panel = new JPanel(new MigLayout(
                 "insets 12 8 8 8, gap 10",
-                "[right]rel[200!,grow][right]rel[200!,grow]",
+                "[right]rel[grow,fill][right]rel[grow,fill]",
                 "[]10[]"));
         panel.setBackground(TemaF1.FONDO);
 
-        txtNombre = new JTextField(20);
-        txtExperiencia = new JTextField(10);
-        txtHabilidadLluvia = new JTextField(10);
+        txtNombre = new JTextField();
+        txtExperiencia = new JTextField();
+        txtHabilidadLluvia = new JTextField();
         btnRegistrar = new JButton(TemaF1.icono("add"));
         btnRegistrar.setText(" Registrar");
 
         panel.add(TemaF1.etiqueta("Nombre:"));
-        panel.add(txtNombre);
+        panel.add(txtNombre, "wmin 100");
         panel.add(TemaF1.etiqueta("Experiencia (1-100):"));
-        panel.add(txtExperiencia);
+        panel.add(txtExperiencia, "wmin 80");
 
         panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
-        panel.add(txtHabilidadLluvia, "span 2, growx");
+        panel.add(txtHabilidadLluvia, "span 2, growx, wmin 100");
         panel.add(btnRegistrar, "w 160!");
 
         return panel;

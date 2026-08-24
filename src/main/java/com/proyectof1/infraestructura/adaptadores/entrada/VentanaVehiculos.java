@@ -78,11 +78,11 @@ public class VentanaVehiculos extends JFrame {
         tabla.getColumnModel().getColumn(0).setCellRenderer(new RendererEscuderia());
         add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        JPanel cuerpoSur = new JPanel();
-        cuerpoSur.setLayout(new BoxLayout(cuerpoSur, BoxLayout.Y_AXIS));
-        cuerpoSur.setBorder(TemaF1.margenes(8, 12, 16, 16));
-        cuerpoSur.add(construirPanelBusqueda());
-        cuerpoSur.add(construirPanelFormulario());
+        JPanel cuerpoSur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][]"));
+        cuerpoSur.setBackground(TemaF1.FONDO);
+        cuerpoSur.setBorder(TemaF1.margenes(0, 12, 16, 16));
+        cuerpoSur.add(construirPanelBusqueda(), "growx");
+        cuerpoSur.add(construirPanelFormulario(), "growx");
         add(cuerpoSur, BorderLayout.SOUTH);
 
         btnRegistrar.addActionListener(e -> {
@@ -160,34 +160,34 @@ public class VentanaVehiculos extends JFrame {
     private JPanel construirPanelFormulario() {
         JPanel panel = new JPanel(new MigLayout(
                 "insets 12 8 8 8, gap 10",
-                "[right]rel[200!,grow][right]rel[200!,grow]",
+                "[right]rel[grow,fill][right]rel[grow,fill]",
                 "[]10[]10[]10[]"));
         panel.setBackground(TemaF1.FONDO);
 
-        txtMarcaEscuderia = new JTextField(20);
-        txtVelocidadMaxima = new JTextField(10);
-        txtAceleracion = new JTextField(10);
-        txtFrenado = new JTextField(10);
-        txtAgarre = new JTextField(10);
+        txtMarcaEscuderia = new JTextField();
+        txtVelocidadMaxima = new JTextField();
+        txtAceleracion = new JTextField();
+        txtFrenado = new JTextField();
+        txtAgarre = new JTextField();
         modeloPilotos = new DefaultComboBoxModel<>();
         comboPilotos = new JComboBox<>(modeloPilotos);
         btnRegistrar = new JButton(TemaF1.icono("add"));
         btnRegistrar.setText(" Registrar");
 
         panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(txtMarcaEscuderia);
+        panel.add(txtMarcaEscuderia, "wmin 100");
         panel.add(TemaF1.etiqueta("Velocidad máxima:"));
-        panel.add(txtVelocidadMaxima);
+        panel.add(txtVelocidadMaxima, "wmin 80");
 
         panel.add(TemaF1.etiqueta("Aceleración (1-100):"));
-        panel.add(txtAceleracion);
+        panel.add(txtAceleracion, "wmin 80");
         panel.add(TemaF1.etiqueta("Frenado (1-100):"));
-        panel.add(txtFrenado);
+        panel.add(txtFrenado, "wmin 80");
 
         panel.add(TemaF1.etiqueta("Agarre (1-100):"));
-        panel.add(txtAgarre);
+        panel.add(txtAgarre, "wmin 80");
         panel.add(TemaF1.etiqueta("Piloto:"));
-        panel.add(comboPilotos);
+        panel.add(comboPilotos, "wmin 100");
 
         panel.add(btnRegistrar, "span 2, w 160!");
 
