@@ -45,7 +45,7 @@ public class VentanaCircuitos extends JFrame {
                 "El servicio de circuitos no puede ser nulo.");
 
         setTitle("Administración de Circuitos");
-        setSize(780, 600);
+        setSize(860, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -149,18 +149,18 @@ public class VentanaCircuitos extends JFrame {
 
     private JPanel construirPanelFormulario() {
         JPanel panel = new JPanel(new MigLayout(
-                "insets 8 0 4 0, gap 12",
-                "[right]rel[grow,fill][right]rel[grow,fill]",
-                "[]8[]8[]"));
+                "insets 12 8 8 8, gap 10",
+                "[right]rel[200!,grow][right]rel[200!,grow]",
+                "[]10[]10[]10[]"));
         panel.setBackground(TemaF1.FONDO);
 
-        txtNombre = new JTextField(16);
-        txtKilometros = new JTextField(8);
-        txtUbicacion = new JTextField(16);
-        txtNumCurvas = new JTextField(6);
+        txtNombre = new JTextField(20);
+        txtKilometros = new JTextField(10);
+        txtUbicacion = new JTextField(20);
+        txtNumCurvas = new JTextField(8);
         comboTipoCircuito = new JComboBox<>(new String[]{"Permanente", "Urbano", "Semiacotico"});
-        txtVueltasTipicas = new JTextField(6);
-        txtRecordVuelta = new JTextField(16);
+        txtVueltasTipicas = new JTextField(8);
+        txtRecordVuelta = new JTextField(20);
         btnRegistrar = new JButton(TemaF1.icono("add"));
         btnRegistrar.setText(" Registrar");
 
@@ -181,7 +181,7 @@ public class VentanaCircuitos extends JFrame {
 
         panel.add(TemaF1.etiqueta("Récord:"));
         panel.add(txtRecordVuelta, "span 2, growx");
-        panel.add(btnRegistrar, "w 140!");
+        panel.add(btnRegistrar, "w 160!");
 
         return panel;
     }

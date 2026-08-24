@@ -129,14 +129,14 @@ public class VentanaPilotos extends JFrame {
 
     private JPanel construirPanelFormulario() {
         JPanel panel = new JPanel(new MigLayout(
-                "insets 8 0 4 0, gap 12",
-                "[right]rel[grow,fill][right]rel[grow,fill]",
-                "[]8[]"));
+                "insets 12 8 8 8, gap 10",
+                "[right]rel[200!,grow][right]rel[200!,grow]",
+                "[]10[]"));
         panel.setBackground(TemaF1.FONDO);
 
-        txtNombre = new JTextField(16);
-        txtExperiencia = new JTextField(8);
-        txtHabilidadLluvia = new JTextField(8);
+        txtNombre = new JTextField(20);
+        txtExperiencia = new JTextField(10);
+        txtHabilidadLluvia = new JTextField(10);
         btnRegistrar = new JButton(TemaF1.icono("add"));
         btnRegistrar.setText(" Registrar");
 
@@ -147,7 +147,7 @@ public class VentanaPilotos extends JFrame {
 
         panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
         panel.add(txtHabilidadLluvia, "span 2, growx");
-        panel.add(btnRegistrar, "w 140!");
+        panel.add(btnRegistrar, "w 160!");
 
         return panel;
     }

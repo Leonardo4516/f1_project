@@ -53,7 +53,7 @@ public class VentanaVehiculos extends JFrame {
                 "Los servicios de vehículo y piloto no pueden ser nulos.");
 
         setTitle("Administración de Vehículos");
-        setSize(700, 540);
+        setSize(780, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -159,16 +159,16 @@ public class VentanaVehiculos extends JFrame {
 
     private JPanel construirPanelFormulario() {
         JPanel panel = new JPanel(new MigLayout(
-                "insets 8 0 4 0, gap 12",
-                "[right]rel[grow,fill][right]rel[grow,fill]",
-                "[]8[]8[]8[]"));
+                "insets 12 8 8 8, gap 10",
+                "[right]rel[200!,grow][right]rel[200!,grow]",
+                "[]10[]10[]10[]"));
         panel.setBackground(TemaF1.FONDO);
 
-        txtMarcaEscuderia = new JTextField(16);
-        txtVelocidadMaxima = new JTextField(8);
-        txtAceleracion = new JTextField(8);
-        txtFrenado = new JTextField(8);
-        txtAgarre = new JTextField(8);
+        txtMarcaEscuderia = new JTextField(20);
+        txtVelocidadMaxima = new JTextField(10);
+        txtAceleracion = new JTextField(10);
+        txtFrenado = new JTextField(10);
+        txtAgarre = new JTextField(10);
         modeloPilotos = new DefaultComboBoxModel<>();
         comboPilotos = new JComboBox<>(modeloPilotos);
         btnRegistrar = new JButton(TemaF1.icono("add"));
@@ -189,7 +189,7 @@ public class VentanaVehiculos extends JFrame {
         panel.add(TemaF1.etiqueta("Piloto:"));
         panel.add(comboPilotos);
 
-        panel.add(btnRegistrar, "span 2, w 140!");
+        panel.add(btnRegistrar, "span 2, w 160!");
 
         return panel;
     }
