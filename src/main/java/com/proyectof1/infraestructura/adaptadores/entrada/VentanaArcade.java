@@ -113,6 +113,7 @@ public class VentanaArcade extends JFrame {
         centro.add(wrapperPista, BorderLayout.CENTER);
 
         panelRanking = construirPanelRanking();
+        TemaF1.conBorde(panelRanking);
         panelRanking.setVisible(false);
         centro.add(panelRanking, BorderLayout.EAST);
 
@@ -143,17 +144,17 @@ public class VentanaArcade extends JFrame {
 
         etiquetaVidas = TemaF1.etiqueta("Vidas: ♥♥♥");
         etiquetaVidas.setFont(fuenteNumeros);
-        etiquetaVidas.setForeground(new Color(0xFF5252));
+        etiquetaVidas.setForeground(TemaF1.ROJO_F1);
         etiquetaVidas.setPreferredSize(new Dimension(130, 24));
 
         etiquetaNivel = TemaF1.etiqueta("Niv: 00");
         etiquetaNivel.setFont(fuenteChica);
-        etiquetaNivel.setForeground(new Color(0x52E252));
+        etiquetaNivel.setForeground(TemaF1.colorDeEscuderia("Sauber"));
         etiquetaNivel.setPreferredSize(new Dimension(70, 24));
 
         etiquetaRecord = TemaF1.etiqueta("Récord: 00000");
         etiquetaRecord.setFont(fuenteChica);
-        etiquetaRecord.setForeground(new Color(0xF7C948));
+        etiquetaRecord.setForeground(TemaF1.colorDeEscuderia("Lotus"));
         etiquetaRecord.setPreferredSize(new Dimension(150, 24));
 
         panel.add(etiquetaPuntos, "w 150!");
@@ -175,7 +176,7 @@ public class VentanaArcade extends JFrame {
 
         JLabel titulo = TemaF1.etiqueta("TOP 5");
         titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 16f));
-        titulo.setForeground(new Color(0xF7C948));
+        titulo.setForeground(TemaF1.colorDeEscuderia("Lotus"));
         titulo.setHorizontalAlignment(JLabel.CENTER);
         panel.add(titulo, "growx, wrap");
 
