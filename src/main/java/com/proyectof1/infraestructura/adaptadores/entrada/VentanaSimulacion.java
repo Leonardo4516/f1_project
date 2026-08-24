@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -41,8 +39,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import net.miginfocom.swing.MigLayout;
-
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
 import com.proyectof1.aplicacion.servicios.CarreraEnVivo;
@@ -54,6 +50,8 @@ import com.proyectof1.dominio.ConfiguracionCarrera;
 import com.proyectof1.dominio.ResultadoCarrera;
 import com.proyectof1.dominio.ResultadoParticipante;
 import com.proyectof1.dominio.Vehiculo;
+
+import net.miginfocom.swing.MigLayout;
 
 public class VentanaSimulacion extends JFrame {
 
@@ -330,7 +328,7 @@ public class VentanaSimulacion extends JFrame {
         panel.add(TemaF1.etiqueta("Velocidad:"));
         panel.add(btn1x, "w 50!");
         panel.add(btn2x, "w 50!");
-        panel.add(btn4x, "w 50!", "wrap");
+        panel.add(btn4x, "w 50!");
 
         JPanel panelGrafica = construirPanelGrafica();
         panel.add(panelGrafica, "span, growx, gap top 8");
