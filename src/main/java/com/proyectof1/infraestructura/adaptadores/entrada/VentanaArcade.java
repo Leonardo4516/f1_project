@@ -103,20 +103,23 @@ public class VentanaArcade extends JFrame {
         cabecera.add(TemaF1.titulo("Juego Arcade"));
         add(cabecera, BorderLayout.NORTH);
 
-        JPanel centro = new JPanel(new MigLayout("insets 0, fill", "[grow][]", "[grow][]"));
+        JPanel centro = new JPanel(new BorderLayout(0, 0));
         panelPista = new PanelPista();
         panelPista.setPreferredSize(new Dimension(ANCHO_PISTA, ALTO_PISTA));
 
         JPanel wrapperPista = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapperPista.setBackground(TemaF1.ASFALTO);
         wrapperPista.add(panelPista);
-        centro.add(wrapperPista, "grow");
+        centro.add(wrapperPista, BorderLayout.CENTER);
 
         panelRanking = construirPanelRanking();
         panelRanking.setVisible(false);
-        centro.add(panelRanking, "growy");
+        centro.add(panelRanking, BorderLayout.EAST);
 
-        centro.add(construirPanelMarcadores(), "growx, wrap");
+        JPanel wrapperMarcadores = new JPanel(new BorderLayout());
+        wrapperMarcadores.setBackground(TemaF1.PANEL);
+        wrapperMarcadores.add(construirPanelMarcadores(), BorderLayout.CENTER);
+        centro.add(wrapperMarcadores, BorderLayout.SOUTH);
 
         add(centro, BorderLayout.CENTER);
 
@@ -409,7 +412,7 @@ public class VentanaArcade extends JFrame {
                 "Chocaste. Puntuación: " + juego.getPuntuacion() + " puntos.",
                 "Fin de la carrera", JOptionPane.INFORMATION_MESSAGE);
 
-        etiquetaRecord.setText("Récord: " + juego.getRecord());
+        etiquetaRecord.setText(String.format("Récord: %05d", juego.getRecord()));
     }
 
     private int aPixelY(double yLogica) {
