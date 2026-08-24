@@ -1,10 +1,8 @@
 package com.proyectof1.infraestructura.adaptadores.entrada;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Objects;
@@ -18,7 +16,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.proyectof1.aplicacion.puertos.entrada.CircuitoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.PilotoServicio;
 import com.proyectof1.aplicacion.puertos.entrada.VehiculoServicio;
@@ -26,10 +23,6 @@ import com.proyectof1.aplicacion.puertos.salida.RankingRepositorio;
 import com.proyectof1.aplicacion.servicios.SimulacionService;
 
 public class VentanaPrincipal extends JFrame {
-
-    private static final Color ACENTO_CIRCUITOS = new Color(0x3671C6);
-    private static final Color ACENTO_PILOTOS = new Color(0x52E252);
-    private static final Color ACENTO_VEHICULOS = new Color(0xFF8000);
 
     private final CircuitoServicio circuitoServicio;
     private final PilotoServicio pilotoServicio;
@@ -58,13 +51,16 @@ public class VentanaPrincipal extends JFrame {
 
         JPanel menu = new JPanel();
         menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
-        menu.setBorder(TemaF1.margenes(12, 24, 60, 60));
+        TemaF1.conBorde(menu);
+        menu.setBorder(BorderFactory.createCompoundBorder(
+                menu.getBorder(),
+                TemaF1.margenes(8, 16, 48, 48)));
 
-        JButton btnCircuitos = nuevoBotonMenu("Circuitos", "Administra pistas y trazados", ACENTO_CIRCUITOS, "circuits");
-        JButton btnPilotos = nuevoBotonMenu("Pilotos", "Gestiona tu alineación", ACENTO_PILOTOS, "drivers");
-        JButton btnVehiculos = nuevoBotonMenu("Vehículos", "Configura tus escuderías", ACENTO_VEHICULOS, "car");
+        JButton btnCircuitos = nuevoBotonMenu("Circuitos", "Administra pistas y trazados", TemaF1.colorDeEscuderia("Red Bull"), "circuits");
+        JButton btnPilotos = nuevoBotonMenu("Pilotos", "Gestiona tu alineación", TemaF1.colorDeEscuderia("Sauber"), "drivers");
+        JButton btnVehiculos = nuevoBotonMenu("Vehículos", "Configura tus escuderías", TemaF1.colorDeEscuderia("McLaren"), "car");
         JButton btnSimulacion = nuevoBotonMenu("Simulación", "Vive la carrera en tiempo real", TemaF1.ROJO_F1, "flag");
-        JButton btnArcade = nuevoBotonMenu("Juego Arcade", "Conduce y esquiva en modo arcade", new Color(0x00E5FF), "gamepad");
+        JButton btnArcade = nuevoBotonMenu("Juego Arcade", "Conduce y esquiva en modo arcade", TemaF1.colorDeEscuderia("Mercedes"), "gamepad");
 
         menu.add(btnCircuitos);
         menu.add(Box.createVerticalStrut(14));
@@ -114,9 +110,8 @@ public class VentanaPrincipal extends JFrame {
         cabecera.setLayout(new BoxLayout(cabecera, BoxLayout.Y_AXIS));
         cabecera.setBorder(TemaF1.margenes(28, 6, 24, 24));
 
-        JLabel titulo = new JLabel("Formulemon");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 30f));
-        titulo.setForeground(TemaF1.ROJO_F1);
+        JLabel titulo = TemaF1.titulo("Formulemon");
+        titulo.setFont(titulo.getFont().deriveFont(java.awt.Font.BOLD, 30f));
         titulo.setAlignmentX(CENTER_ALIGNMENT);
 
         JLabel subtitulo = TemaF1.subtitulo("Gestiona tu equipo y compite en carreras reales");
@@ -137,7 +132,7 @@ public class VentanaPrincipal extends JFrame {
         return cabecera;
     }
 
-    private JButton nuevoBotonMenu(String nombre, String descripcion, Color acento, String iconoNombre) {
+    private JButton nuevoBotonMenu(String nombre, String descripcion, java.awt.Color acento, String iconoNombre) {
         JButton boton = new BotonMenu(nombre, descripcion, acento, iconoNombre);
         boton.setAlignmentX(CENTER_ALIGNMENT);
         boton.setMinimumSize(new Dimension(380, 68));
@@ -148,15 +143,11 @@ public class VentanaPrincipal extends JFrame {
 
     private class BotonMenu extends JButton {
 
-        private static final Color HOVER = new Color(0x2A2A2A);
-        private static final Color PRESIONADO = new Color(0x232323);
-
-        BotonMenu(String nombre, String descripcion, Color acento, String iconoNombre) {
+        BotonMenu(String nombre, String descripcion, java.awt.Color acento, String iconoNombre) {
             super("<html><b style='font-size:14px'>" + nombre.toUpperCase()
                     + "</b><br><font color='#9A9A9A' size='2'>" + descripcion + "</font></html>");
 
-            FlatSVGIcon icono = TemaF1.icono(iconoNombre);
-            setIcon(icono);
+            setIcon(TemaF1.icono(iconoNombre));
 
             setHorizontalAlignment(LEFT);
             setVerticalAlignment(CENTER);
@@ -174,7 +165,7 @@ public class VentanaPrincipal extends JFrame {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    setBackground(HOVER);
+                    setBackground(TemaF1.ASFALTO);
                 }
 
                 @Override
@@ -184,12 +175,12 @@ public class VentanaPrincipal extends JFrame {
 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    setBackground(PRESIONADO);
+                    setBackground(TemaF1.BORDE);
                 }
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    setBackground(HOVER);
+                    setBackground(TemaF1.ASFALTO);
                 }
             });
         }
