@@ -109,9 +109,8 @@ public final class TemaF1 {
     }
 
     public static void estilizarBoton(JButton boton) {
-        boton.setFont(boton.getFont().deriveFont(Font.BOLD, 14f));
+        boton.setFont(boton.getFont().deriveFont(Font.BOLD, 13f));
         boton.setFocusPainted(false);
-        boton.setBorder(new EmptyBorder(8, 18, 8, 18));
     }
 
     public static JLabel titulo(String texto) {
