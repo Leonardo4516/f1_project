@@ -48,7 +48,7 @@ public class VentanaPilotos extends JFrame {
         btnEliminar = new JButton(TemaF1.icono("delete"));
         btnEliminar.setText(" Eliminar");
         TemaF1.estilizarBoton(btnEliminar);
-        cabecera.add(btnEliminar, "right");
+        cabecera.add(btnEliminar, "w 140!, right");
         add(cabecera, BorderLayout.NORTH);
 
         modelo = new DefaultTableModel(new String[]{"Nombre", "Experiencia (1-100)", "Habilidad lluvia (1-100)"}, 0) {
@@ -122,7 +122,7 @@ public class VentanaPilotos extends JFrame {
 
         panel.add(TemaF1.etiqueta("Nombre:"));
         panel.add(txtBuscar, "growx");
-        panel.add(btnBuscar);
+        panel.add(btnBuscar, "w 120!");
 
         return panel;
     }
@@ -146,8 +146,8 @@ public class VentanaPilotos extends JFrame {
         panel.add(txtExperiencia);
 
         panel.add(TemaF1.etiqueta("Habilidad lluvia (1-100):"));
-        panel.add(txtHabilidadLluvia, "span 2");
-        panel.add(btnRegistrar, "right");
+        panel.add(txtHabilidadLluvia, "span 2, growx");
+        panel.add(btnRegistrar, "w 140!");
 
         return panel;
     }

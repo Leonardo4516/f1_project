@@ -63,7 +63,7 @@ public class VentanaVehiculos extends JFrame {
         btnEliminar = new JButton(TemaF1.icono("delete"));
         btnEliminar.setText(" Eliminar");
         TemaF1.estilizarBoton(btnEliminar);
-        cabecera.add(btnEliminar, "right");
+        cabecera.add(btnEliminar, "w 140!, right");
         add(cabecera, BorderLayout.NORTH);
 
         modelo = new DefaultTableModel(new String[]{"Escudería", "Vel. máx", "Acel", "Fren", "Agar", "Piloto"}, 0) {
@@ -152,7 +152,7 @@ public class VentanaVehiculos extends JFrame {
 
         panel.add(TemaF1.etiqueta("Escudería:"));
         panel.add(txtBuscar, "growx");
-        panel.add(btnBuscar);
+        panel.add(btnBuscar, "w 120!");
 
         return panel;
     }
@@ -189,7 +189,7 @@ public class VentanaVehiculos extends JFrame {
         panel.add(TemaF1.etiqueta("Piloto:"));
         panel.add(comboPilotos);
 
-        panel.add(btnRegistrar, "right, span 2");
+        panel.add(btnRegistrar, "span 2, w 140!");
 
         return panel;
     }

@@ -149,7 +149,7 @@ public final class TemaF1 {
 
     /** Crea un icono SVG desde la carpeta de recursos icons/. */
     public static FlatSVGIcon icono(String nombre) {
-        return new FlatSVGIcon("icons/" + nombre + ".svg", 1.5f);
+        return new FlatSVGIcon("icons/" + nombre + ".svg", 1.0f);
     }
 
     /** Crea un icono SVG pequeño (para botones de tabla, etc.). */

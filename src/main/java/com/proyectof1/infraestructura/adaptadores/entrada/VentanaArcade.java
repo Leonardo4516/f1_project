@@ -251,11 +251,11 @@ public class VentanaArcade extends JFrame {
         btnPausa.setEnabled(false);
 
         panel.add(TemaF1.etiqueta("Escudería:"));
-        panel.add(comboVehiculos);
+        panel.add(comboVehiculos, "w 180!");
         panel.add(TemaF1.etiqueta("Dificultad:"));
-        panel.add(comboDificultad, "growx");
-        panel.add(btnIniciar);
-        panel.add(btnPausa, "wrap");
+        panel.add(comboDificultad, "w 160!");
+        panel.add(btnIniciar, "w 100!");
+        panel.add(btnPausa, "w 100!, wrap");
 
         comboVehiculos.addActionListener(e -> {
             Vehiculo seleccion = (Vehiculo) comboVehiculos.getSelectedItem();

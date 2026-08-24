@@ -189,8 +189,8 @@ public class VentanaSimulacion extends JFrame {
         panel.add(comboCircuitos);
         panel.add(TemaF1.etiqueta("Clima:"));
         panel.add(etiquetaClima);
-        panel.add(btnClasificacion);
-        panel.add(btnIniciar, "wrap");
+        panel.add(btnClasificacion, "w 140!");
+        panel.add(btnIniciar, "w 140!, wrap");
 
         panel.add(TemaF1.etiqueta("Compuesto:"));
         panel.add(comboCompuesto);
@@ -301,7 +301,7 @@ public class VentanaSimulacion extends JFrame {
     }
 
     private JPanel construirPanelControles() {
-        JPanel panel = new JPanel(new MigLayout("insets 6 8 6 8, gap 8", "[][][][][][][][]", "[]"));
+        JPanel panel = new JPanel(new MigLayout("insets 6 8 6 8, gap 4", "[][][][][][]", "[][grow]"));
         panel.setBackground(TemaF1.FONDO);
         panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE));
 
@@ -326,12 +326,11 @@ public class VentanaSimulacion extends JFrame {
         btn4x.addActionListener(e -> setVelocidad(4));
 
         panel.add(TemaF1.etiqueta("Control:"));
-        panel.add(btnPausa);
-        panel.add(Box.createHorizontalStrut(20));
+        panel.add(btnPausa, "w 100!");
         panel.add(TemaF1.etiqueta("Velocidad:"));
-        panel.add(btn1x);
-        panel.add(btn2x);
-        panel.add(btn4x);
+        panel.add(btn1x, "w 50!");
+        panel.add(btn2x, "w 50!");
+        panel.add(btn4x, "w 50!", "wrap");
 
         JPanel panelGrafica = construirPanelGrafica();
         panel.add(panelGrafica, "span, growx, gap top 8");
