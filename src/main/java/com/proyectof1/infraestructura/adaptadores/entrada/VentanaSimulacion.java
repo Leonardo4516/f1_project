@@ -242,11 +242,27 @@ public class VentanaSimulacion extends JFrame {
         panel.setBackground(TemaF1.PANEL);
         panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, TemaF1.BORDE));
 
-        lblTelemetriaVelocidad = TemaF1.etiqueta("Vel: -- km/h");
-        lblTelemetriaDesgaste = TemaF1.etiqueta("Desgaste: -- %");
-        lblTelemetriaCompuesto = TemaF1.etiqueta("Compuesto: --");
-        lblTelemetriaParadas = TemaF1.etiqueta("Paradas: --");
-        lblTelemetriaUltimaVuelta = TemaF1.etiqueta("Última vuelta: --");
+        Font fuenteMono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+
+        lblTelemetriaVelocidad = TemaF1.etiqueta("Vel:  ---- km/h");
+        lblTelemetriaVelocidad.setFont(fuenteMono);
+        lblTelemetriaVelocidad.setPreferredSize(new Dimension(130, 18));
+
+        lblTelemetriaDesgaste = TemaF1.etiqueta("Desg: ---.- %%");
+        lblTelemetriaDesgaste.setFont(fuenteMono);
+        lblTelemetriaDesgaste.setPreferredSize(new Dimension(110, 18));
+
+        lblTelemetriaCompuesto = TemaF1.etiqueta("Comp: ------");
+        lblTelemetriaCompuesto.setFont(fuenteMono);
+        lblTelemetriaCompuesto.setPreferredSize(new Dimension(120, 18));
+
+        lblTelemetriaParadas = TemaF1.etiqueta("Pits: --");
+        lblTelemetriaParadas.setFont(fuenteMono);
+        lblTelemetriaParadas.setPreferredSize(new Dimension(70, 18));
+
+        lblTelemetriaUltimaVuelta = TemaF1.etiqueta("Vuelta: --.-- s");
+        lblTelemetriaUltimaVuelta.setFont(fuenteMono);
+        lblTelemetriaUltimaVuelta.setPreferredSize(new Dimension(130, 18));
 
         panel.add(lblTelemetriaVelocidad);
         panel.add(lblTelemetriaDesgaste);
@@ -535,11 +551,11 @@ public class VentanaSimulacion extends JFrame {
 
         int filaSeleccionada = tablaRanking.getSelectedRow();
         if (filaSeleccionada < 0) {
-            lblTelemetriaVelocidad.setText("Vel: -- km/h");
-            lblTelemetriaDesgaste.setText("Desgaste: -- %");
-            lblTelemetriaCompuesto.setText("Compuesto: --");
-            lblTelemetriaParadas.setText("Paradas: --");
-            lblTelemetriaUltimaVuelta.setText("Última vuelta: --");
+            lblTelemetriaVelocidad.setText("Vel:  ---- km/h");
+            lblTelemetriaDesgaste.setText("Desg: ---.- %%");
+            lblTelemetriaCompuesto.setText("Comp: ------");
+            lblTelemetriaParadas.setText("Pits: --");
+            lblTelemetriaUltimaVuelta.setText("Vuelta: --.-- s");
             return;
         }
 
@@ -547,15 +563,15 @@ public class VentanaSimulacion extends JFrame {
         if (filaSeleccionada < ranking.size()) {
             AutoEnCarrera auto = ranking.get(filaSeleccionada);
 
-            lblTelemetriaVelocidad.setText(String.format("Vel: %.0f km/h", auto.getVelocidadActual()));
-            lblTelemetriaDesgaste.setText(String.format("Desgaste: %.1f %%", auto.getDesgaste()));
-            lblTelemetriaCompuesto.setText("Compuesto: " + auto.getCompuesto().getEtiqueta());
-            lblTelemetriaParadas.setText("Paradas: " + auto.getParadas());
+            lblTelemetriaVelocidad.setText(String.format("Vel: %4.0f km/h", auto.getVelocidadActual()));
+            lblTelemetriaDesgaste.setText(String.format("Desg: %5.1f %%", auto.getDesgaste()));
+            lblTelemetriaCompuesto.setText(String.format("Comp: %-6s", auto.getCompuesto().getEtiqueta()));
+            lblTelemetriaParadas.setText(String.format("Pits: %2d", auto.getParadas()));
 
             String ultimaVuelta = auto.getHoraUltimaVuelta() > 0
-                    ? String.format(Locale.US, "%.2f s", auto.getHoraUltimaVuelta())
-                    : "--";
-            lblTelemetriaUltimaVuelta.setText("Última vuelta: " + ultimaVuelta);
+                    ? String.format(Locale.US, "%5.2f s", auto.getHoraUltimaVuelta())
+                    : "--.-- s";
+            lblTelemetriaUltimaVuelta.setText("Vuelta: " + ultimaVuelta);
         }
     }
 

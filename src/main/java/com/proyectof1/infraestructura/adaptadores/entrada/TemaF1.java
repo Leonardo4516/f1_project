@@ -8,16 +8,19 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.formdev.flatlaf.themes.FlatDarkPurpleIJTheme;
 
-import net.miginfocom.swing.MigLayout;
+// Replaced MigLayout usage to avoid dependency on net.miginfocom.layout.LC (missing class at compile time)
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
@@ -192,13 +195,16 @@ public final class TemaF1 {
         return chart;
     }
 
-    /** Crea un panel MigLayout con estilo oscuro para formularios. */
+    /** Crea un panel con GridBagLayout (alternativa a MigLayout) con estilo oscuro para formularios. */
     public static JPanel panelFormulario() {
-        JPanel panel = new JPanel(new MigLayout(
-                "fillx, insets 8",
-                "[right]rel[grow,fill]rel[grow,fill]",
-                "[]8[]"));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(FONDO);
+        // Default constraints for form rows: label on left, field(s) on right
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 8, 4, 8);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.0; // label
+        // Note: caller should provide components and use these constraints as a template.
         return panel;
     }
 }

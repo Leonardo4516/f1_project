@@ -127,32 +127,39 @@ public class VentanaArcade extends JFrame {
     }
 
     private JPanel construirPanelMarcadores() {
-        JPanel panel = new JPanel(new MigLayout("insets 4 12 4 12, gap 16", "[][grow][]", "[]"));
+        JPanel panel = new JPanel(new MigLayout("insets 4 12 4 12, gap 16", "[150!][][150!]", "[]"));
         panel.setBackground(TemaF1.PANEL);
 
-        etiquetaPuntos = TemaF1.etiqueta("Puntos: 0");
-        etiquetaPuntos.setFont(etiquetaPuntos.getFont().deriveFont(Font.BOLD, 16f));
+        Font fuenteNumeros = new Font(Font.MONOSPACED, Font.BOLD, 16);
+        Font fuenteChica = new Font(Font.MONOSPACED, Font.BOLD, 14);
+
+        etiquetaPuntos = TemaF1.etiqueta("Pts: 00000");
+        etiquetaPuntos.setFont(fuenteNumeros);
         etiquetaPuntos.setForeground(TemaF1.TEXTO);
+        etiquetaPuntos.setPreferredSize(new Dimension(150, 24));
 
         etiquetaVidas = TemaF1.etiqueta("Vidas: ♥♥♥");
-        etiquetaVidas.setFont(etiquetaVidas.getFont().deriveFont(Font.BOLD, 16f));
+        etiquetaVidas.setFont(fuenteNumeros);
         etiquetaVidas.setForeground(new Color(0xFF5252));
+        etiquetaVidas.setPreferredSize(new Dimension(130, 24));
 
-        etiquetaNivel = TemaF1.etiqueta("Nivel: 1");
-        etiquetaNivel.setFont(etiquetaNivel.getFont().deriveFont(Font.BOLD, 14f));
+        etiquetaNivel = TemaF1.etiqueta("Niv: 00");
+        etiquetaNivel.setFont(fuenteChica);
         etiquetaNivel.setForeground(new Color(0x52E252));
+        etiquetaNivel.setPreferredSize(new Dimension(70, 24));
 
-        etiquetaRecord = TemaF1.etiqueta("Récord: " + juego.getRecord());
-        etiquetaRecord.setFont(etiquetaRecord.getFont().deriveFont(Font.BOLD, 14f));
+        etiquetaRecord = TemaF1.etiqueta("Récord: 00000");
+        etiquetaRecord.setFont(fuenteChica);
         etiquetaRecord.setForeground(new Color(0xF7C948));
+        etiquetaRecord.setPreferredSize(new Dimension(150, 24));
 
-        panel.add(etiquetaPuntos);
-        JPanel centro = new JPanel(new MigLayout("insets 0, gap 12", "[][]"));
+        panel.add(etiquetaPuntos, "w 150!");
+        JPanel centro = new JPanel(new MigLayout("insets 0, gap 8", "[][]"));
         centro.setOpaque(false);
-        centro.add(etiquetaVidas);
-        centro.add(etiquetaNivel);
+        centro.add(etiquetaVidas, "w 130!");
+        centro.add(etiquetaNivel, "w 70!");
         panel.add(centro, "growx");
-        panel.add(etiquetaRecord);
+        panel.add(etiquetaRecord, "w 150!");
 
         return panel;
     }
@@ -376,10 +383,10 @@ public class VentanaArcade extends JFrame {
     }
 
     private void actualizarMarcadores() {
-        etiquetaPuntos.setText("Puntos: " + juego.getPuntuacion());
-        etiquetaNivel.setText("Nivel: " + (juego.getNivel() + 1));
+        etiquetaPuntos.setText(String.format("Pts: %05d", juego.getPuntuacion()));
+        etiquetaNivel.setText(String.format("Niv: %02d", juego.getNivel() + 1));
         etiquetaVidas.setText("Vidas: " + corazones(juego.getVidas()));
-        etiquetaRecord.setText("Récord: " + juego.getRecord());
+        etiquetaRecord.setText(String.format("Récord: %05d", juego.getRecord()));
     }
 
     private String corazones(int vidas) {
