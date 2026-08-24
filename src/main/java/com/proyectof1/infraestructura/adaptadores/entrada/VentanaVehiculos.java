@@ -71,17 +71,22 @@ public class VentanaVehiculos extends JFrame {
 
         JPanel barraBusqueda = new JPanel(new MigLayout("insets 4 16 4 16, gap 8", "[][grow][]", "[]"));
         barraBusqueda.setBackground(TemaF1.FONDO);
-        txtBuscar = new JTextField();
+        txtBuscar = new JTextField(18);
         btnBuscar = new JButton(TemaF1.icono("search"));
         btnBuscar.setText(" Buscar");
+        TemaF1.estilizarBoton(btnBuscar);
         barraBusqueda.add(TemaF1.etiqueta("Escudería:"));
         barraBusqueda.add(txtBuscar, "growx, wmin 100");
         barraBusqueda.add(btnBuscar, "w 120!");
 
-        JPanel sur = new JPanel(new MigLayout("insets 0, fill, flowy", "[grow]", "[][grow]"));
+        JPanel sur = new JPanel(new MigLayout("insets 4, fill, flowy", "[grow]", "[][grow]"));
         sur.setBackground(TemaF1.FONDO);
-        sur.setBorder(TemaF1.margenes(0, 0, 8, 0));
+        sur.setBorder(TemaF1.margenes(4, 0, 8, 0));
         sur.add(barraBusqueda, "growx");
+
+        JPanel panelTabla = new JPanel(new MigLayout("insets 0, fill", "[grow]", "[grow]"));
+        panelTabla.setBackground(TemaF1.FONDO);
+        TemaF1.conBorde(panelTabla);
 
         modelo = new DefaultTableModel(new String[]{"Escudería", "Vel. máx", "Acel", "Fren", "Agar", "Piloto"}, 0) {
             @Override
@@ -93,7 +98,8 @@ public class VentanaVehiculos extends JFrame {
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabla.setRowHeight(28);
         tabla.getColumnModel().getColumn(0).setCellRenderer(new RendererEscuderia());
-        sur.add(new JScrollPane(tabla), "grow");
+        panelTabla.add(new JScrollPane(tabla), "grow");
+        sur.add(panelTabla, "grow");
         add(sur, BorderLayout.CENTER);
 
         btnRegistrar.addActionListener(e -> mostrarDialogoRegistro());
@@ -233,7 +239,7 @@ public class VentanaVehiculos extends JFrame {
 
             if (!seleccionado) {
                 setBackground(TemaF1.colorDeEscuderia((String) valor));
-                setForeground(java.awt.Color.BLACK);
+                setForeground(TemaF1.FONDO);
                 setFont(getFont().deriveFont(Font.BOLD));
             }
 
