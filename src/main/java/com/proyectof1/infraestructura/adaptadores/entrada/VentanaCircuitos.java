@@ -170,7 +170,7 @@ public class VentanaCircuitos extends JFrame {
         panel.add(btnCancelar, "w 120!");
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(450, 460);
+        dialogo.setSize(480, 530);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());

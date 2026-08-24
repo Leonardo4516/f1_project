@@ -178,7 +178,7 @@ public class VentanaVehiculos extends JFrame {
         panel.add(btnCancelar, "w 120!");
 
         dialogo.setContentPane(panel);
-        dialogo.setSize(420, 400);
+        dialogo.setSize(450, 490);
         dialogo.setLocationRelativeTo(this);
 
         btnCancelar.addActionListener(e -> dialogo.dispose());
